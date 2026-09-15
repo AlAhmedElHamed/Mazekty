@@ -1,7 +1,7 @@
 # Mazekty Pro 🎵 (مزيكتي برو)
 ### Offline High-Resolution Audio Downloader, Pro Studio & Apple/iPhone Sync Engine
 
-[![Latest Release](https://img.shields.io/github/v/release/AlAhmedElHamed/Mazekty?color=blue&label=Download%20v1.0.0)](https://github.com/AlAhmedElHamed/Mazekty/releases/latest)
+[![Latest Release](https://img.shields.io/github/v/release/AlAhmedElHamed/Mazekty?color=blue&label=Download%20Latest)](https://github.com/AlAhmedElHamed/Mazekty/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-macOS%20|%20Windows%20|%20Linux-brightgreen)](https://github.com/AlAhmedElHamed/Mazekty/releases)
 
@@ -9,7 +9,7 @@
   <img src="AppIcon.png" alt="Mazekty Logo" width="128" height="128">
 </p>
 
-### 📥 [Download Mazekty Pro v1.0.0 for macOS, Windows & Linux](https://github.com/AlAhmedElHamed/Mazekty/releases/latest)
+### 📥 [Download Mazekty Pro for macOS, Windows & Linux](https://github.com/AlAhmedElHamed/Mazekty/releases/latest)
 
 Mazekty is a cross-platform (macOS, Windows, Linux) desktop music application designed for downloading high-fidelity audio from YouTube, live searching, audio manipulation (vocal isolation, karaoke creation, pitch/tempo shifting, 8D spatial audio, 10-band graphic EQ, silence cutting, ringtone creator), and seamless syncing with **Apple Music** and **iPhones / mobile devices** (via **AirSync QR Code** & **USB Type-C auto-detection**).
 
@@ -91,7 +91,7 @@ Mazekty defaults to **English** and provides real-time instant localization acro
 ---
 
 ## 🛠 Tech Stack
-- **Backend**: Python 3, Flask, yt-dlp, FFmpeg, Mutagen
+- **Backend**: Python 3, FastAPI, Uvicorn, yt-dlp, FFmpeg, Mutagen
 - **Frontend**: Vanilla JS (ES6+), HTML5, Modern CSS Glassmorphism
 - **Native Shells**: macOS `pywebview` / WebKit native cocoa window
 

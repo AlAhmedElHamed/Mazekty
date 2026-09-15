@@ -10,12 +10,31 @@ Provides cross-platform support for macOS, Windows, and Linux:
 
 import os
 import sys
+import time
 import platform
 import subprocess
 import shutil
+import re
 from typing import Optional, List, Dict, Any
 
 CURRENT_OS = platform.system()  # 'Darwin', 'Windows', 'Linux'
+
+# Windows PnP device scan cache
+_last_win_pnp_scan: float = 0.0
+_cached_win_pnp_devices: List[Dict[str, Any]] = []
+
+def run_silent_cmd(cmd: List[str], **kwargs) -> subprocess.CompletedProcess:
+    """Executes subprocess completely silently with CREATE_NO_WINDOW, SW_HIDE, and DEVNULL stdin on Windows."""
+    if CURRENT_OS == "Windows":
+        kwargs["creationflags"] = kwargs.get("creationflags", 0) | getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
+        if "startupinfo" not in kwargs:
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = 0  # SW_HIDE
+            kwargs["startupinfo"] = si
+        if "stdin" not in kwargs:
+            kwargs["stdin"] = subprocess.DEVNULL
+    return subprocess.run(cmd, **kwargs)
 
 def get_os_name() -> str:
     if CURRENT_OS == "Darwin":
@@ -66,6 +85,16 @@ def get_default_download_dir(fallback_base: Optional[str] = None) -> str:
 
 def find_ffmpeg() -> str:
     """Locates ffmpeg binary across common paths for all platforms."""
+    # 0. Local app bin directory lookup (highest priority for portable installations)
+    base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+    local_candidates = [
+        os.path.join(base_dir, "bin", "ffmpeg.exe" if CURRENT_OS == "Windows" else "ffmpeg"),
+        os.path.join(base_dir, "ffmpeg.exe" if CURRENT_OS == "Windows" else "ffmpeg"),
+    ]
+    for c in local_candidates:
+        if os.path.isfile(c) and (CURRENT_OS == "Windows" or os.access(c, os.X_OK)):
+            return os.path.abspath(c)
+
     # 1. PATH lookup
     ff = shutil.which("ffmpeg")
     if ff:
@@ -98,10 +127,33 @@ def find_ffmpeg() -> str:
         ]
 
     for c in candidates:
-        if os.path.exists(c) and os.access(c, os.X_OK):
-            return c
+        if os.path.isfile(c) and (CURRENT_OS == "Windows" or os.access(c, os.X_OK)):
+            return os.path.abspath(c)
 
     return "ffmpeg"  # fallback to PATH default
+
+def find_ffprobe() -> str:
+    """Locates ffprobe binary across common paths for all platforms."""
+    base_dir = os.path.dirname(sys.executable) if getattr(sys, 'frozen', False) else os.path.dirname(os.path.abspath(__file__))
+    local_candidates = [
+        os.path.join(base_dir, "bin", "ffprobe.exe" if CURRENT_OS == "Windows" else "ffprobe"),
+        os.path.join(base_dir, "ffprobe.exe" if CURRENT_OS == "Windows" else "ffprobe"),
+    ]
+    for c in local_candidates:
+        if os.path.isfile(c) and (CURRENT_OS == "Windows" or os.access(c, os.X_OK)):
+            return os.path.abspath(c)
+
+    fp = shutil.which("ffprobe")
+    if fp:
+        return fp
+
+    ffmpeg_p = find_ffmpeg()
+    if os.path.isabs(ffmpeg_p):
+        probe_next = os.path.join(os.path.dirname(ffmpeg_p), "ffprobe.exe" if CURRENT_OS == "Windows" else "ffprobe")
+        if os.path.isfile(probe_next):
+            return probe_next
+
+    return "ffprobe"
 
 def open_folder_in_explorer(folder_path: str) -> bool:
     """Opens folder in native file manager (Finder / Explorer / Nautilus)."""
@@ -114,7 +166,7 @@ def open_folder_in_explorer(folder_path: str) -> bool:
             subprocess.run(["open", abs_path], check=True)
             return True
         elif CURRENT_OS == "Windows":
-            subprocess.run(["explorer", abs_path], check=True)
+            os.startfile(abs_path)
             return True
         elif CURRENT_OS == "Linux":
             subprocess.run(["xdg-open", abs_path], check=True)
@@ -145,59 +197,109 @@ def open_file_in_system(file_path: str) -> bool:
         return False
     return False
 
+def is_vpn_or_virtual_ip(ip: str) -> bool:
+    """Detects if an IPv4 address belongs to a VPN tunnel (e.g. Mullvad, WireGuard, Tailscale) or virtual switch."""
+    if not ip or ip.startswith("127."):
+        return True
+    # Mullvad Wireguard default subnets: 10.64.0.0/10, 10.128.x.x
+    if ip.startswith("10.128.") or ip.startswith("10.64."):
+        return True
+    # Tailscale / CGNAT range (100.64.0.0 - 100.127.255.255)
+    if ip.startswith("100."):
+        parts = ip.split(".")
+        if len(parts) > 1 and parts[1].isdigit() and 64 <= int(parts[1]) <= 127:
+            return True
+    # Benchmarking/test ranges
+    if ip.startswith("198.18.") or ip.startswith("198.19."):
+        return True
+    return False
+
 def get_all_local_ips() -> List[str]:
-    """Returns all detected local IPv4 addresses on active network interfaces."""
+    """Returns all detected local IPv4 addresses on active network interfaces, prioritizing physical LAN."""
     import socket
     import re
     ips = []
     
-    # 1. Primary route via UDP socket connect
+    # 1. Hostname resolution across all local network adapters
+    try:
+        _, _, host_ips = socket.gethostbyname_ex(socket.gethostname())
+        for hip in host_ips:
+            if hip and not hip.startswith("127.") and hip not in ips:
+                ips.append(hip)
+    except Exception:
+        pass
+
+    # 2. Primary route via UDP socket connect
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.settimeout(0.5)
         s.connect(("8.8.8.8", 80))
         primary_ip = s.getsockname()[0]
         s.close()
-        if primary_ip and not primary_ip.startswith("127."):
+        if primary_ip and not primary_ip.startswith("127.") and primary_ip not in ips:
             ips.append(primary_ip)
     except Exception:
         pass
 
-    # 2. Hostname resolution
+    # 3. OS-level command fallback (ipconfig on Windows, ifconfig/ip on Unix)
     try:
-        host_ip = socket.gethostbyname(socket.gethostname())
-        if host_ip and not host_ip.startswith("127.") and host_ip not in ips:
-            ips.append(host_ip)
-    except Exception:
-        pass
-
-    # 3. Ifconfig / ip addr fallback on macOS & Linux
-    if CURRENT_OS in ("Darwin", "Linux"):
-        try:
+        if CURRENT_OS == "Windows":
+            p = run_silent_cmd(["ipconfig"], capture_output=True, text=True, timeout=3)
+            if p.returncode == 0:
+                found = re.findall(r"IPv4 Address[.\s]+:\s*([0-9.]+)", p.stdout)
+                for ip in found:
+                    if ip not in ips and not ip.startswith("127."):
+                        ips.append(ip)
+        elif CURRENT_OS in ("Darwin", "Linux"):
             cmd = ["ifconfig"] if CURRENT_OS == "Darwin" else ["ip", "addr"]
             out = subprocess.check_output(cmd, text=True, timeout=3)
             found = re.findall(r"(?:inet|inet addr:)\s*(192\.168\.\d+\.\d+|10\.\d+\.\d+\.\d+|172\.(?:1[6-9]|2\d|3[01])\.\d+\.\d+)", out)
             for ip in found:
                 if ip not in ips and not ip.startswith("127."):
                     ips.append(ip)
-        except Exception:
-            pass
+    except Exception:
+        pass
 
-    return ips if ips else ["127.0.0.1"]
+    # Sort so physical LAN IPs come first, and VPN tunnel IPs come last
+    physical_ips = [ip for ip in ips if not is_vpn_or_virtual_ip(ip)]
+    vpn_ips = [ip for ip in ips if is_vpn_or_virtual_ip(ip)]
+    sorted_ips = physical_ips + vpn_ips
+
+    return sorted_ips if sorted_ips else ["127.0.0.1"]
 
 def get_local_ip() -> str:
-    """Returns the most likely local Wi-Fi / LAN IP of the machine."""
+    """
+    Returns the most reliable physical local Wi-Fi / Ethernet LAN IP of the machine.
+    Filters out VPN tunnel IPs (e.g. Mullvad) to ensure mobile phones can connect seamlessly.
+    """
+    import re
     ips = get_all_local_ips()
-    # Prioritize standard home Wi-Fi ranges (192.168.x.x)
+    
+    # 1. Standard home Wi-Fi (192.168.x.x)
     for ip in ips:
-        if ip.startswith("192.168."):
+        if ip.startswith("192.168.") and not is_vpn_or_virtual_ip(ip):
             return ip
+
+    # 2. Private LAN / Ethernet (172.16.x.x - 172.31.x.x)
     for ip in ips:
-        if ip.startswith("10."):
+        if re.match(r"^172\.(?:1[6-9]|2\d|3[01])\.", ip) and not is_vpn_or_virtual_ip(ip):
             return ip
+
+    # 3. Standard Class A LAN (10.x.x.x excluding VPN subnets)
+    for ip in ips:
+        if ip.startswith("10.") and not is_vpn_or_virtual_ip(ip):
+            return ip
+
+    # 4. Any other non-VPN IP
+    for ip in ips:
+        if not ip.startswith("127.") and not is_vpn_or_virtual_ip(ip):
+            return ip
+
+    # 5. Fallback to first available IP
     for ip in ips:
         if not ip.startswith("127."):
             return ip
+
     return "127.0.0.1"
 
 IPHONE_MODEL_MAP = {
@@ -419,6 +521,8 @@ def find_adb_executable() -> Optional[str]:
             return c
     return None
 
+find_adb = find_adb_executable
+
 def detect_connected_android_devices() -> List[Dict[str, Any]]:
     """
     Detects Android smartphones & tablets connected via USB.
@@ -428,11 +532,11 @@ def detect_connected_android_devices() -> List[Dict[str, Any]]:
     devices: List[Dict[str, Any]] = []
     seen_serials = set()
 
-    # 1. Fast ADB query
+    # 1. Fast ADB query (Instant, 0.05s)
     adb_bin = find_adb_executable()
     if adb_bin:
         try:
-            p = subprocess.run([adb_bin, "devices", "-l"], capture_output=True, text=True, timeout=2.0)
+            p = run_silent_cmd([adb_bin, "devices", "-l"], capture_output=True, text=True, timeout=1.5)
             lines = p.stdout.strip().splitlines()
             for line in lines[1:]:
                 line = line.strip()
@@ -539,31 +643,39 @@ def detect_connected_android_devices() -> List[Dict[str, Any]]:
             except Exception:
                 pass
     elif CURRENT_OS == "Windows":
-        try:
-            ps_cmd = 'Get-PnpDevice -Class "WPD","USB" -Status "OK" | Select-Object -ExpandProperty FriendlyName'
-            p = subprocess.run(["powershell", "-NoProfile", "-Command", ps_cmd], capture_output=True, text=True, timeout=4)
-            if p.returncode == 0:
-                for line in p.stdout.splitlines():
-                    line = line.strip()
-                    if not line: continue
-                    for kw in ANDROID_KEYWORDS:
-                        if kw in line.lower() and not any(ign in line.lower() for ign in ["hub", "controller", "mouse", "keyboard"]):
-                            devices.append({
-                                "id": line,
-                                "name": line,
-                                "model": line,
-                                "platform": "android",
-                                "icon": "🤖",
-                                "os": "Android",
-                                "manufacturer": "Android",
-                                "serial": "",
-                                "connection": "USB Cable",
-                                "status": "connected",
-                                "can_adb_sync": False
-                            })
-                            break
-        except Exception:
-            pass
+        # Only query PnP fallback if no ADB devices were found, and cache for 15 seconds to prevent spamming
+        global _last_win_pnp_scan, _cached_win_pnp_devices
+        now = time.time()
+        if not devices:
+            if now - _last_win_pnp_scan > 15.0:
+                _cached_win_pnp_devices = []
+                try:
+                    ps_cmd = 'Get-PnpDevice -Status OK -ErrorAction SilentlyContinue | Where-Object { $_.PNPClass -in @("WPD", "USB") } | Select-Object -ExpandProperty FriendlyName'
+                    p = run_silent_cmd(["powershell", "-NoProfile", "-Command", ps_cmd], capture_output=True, text=True, timeout=3)
+                    if p.returncode == 0:
+                        for line in p.stdout.splitlines():
+                            line = line.strip()
+                            if not line: continue
+                            for kw in ANDROID_KEYWORDS:
+                                if kw in line.lower() and not any(ign in line.lower() for ign in ["hub", "controller", "mouse", "keyboard"]):
+                                    _cached_win_pnp_devices.append({
+                                        "id": line,
+                                        "name": line,
+                                        "model": line,
+                                        "platform": "android",
+                                        "icon": "🤖",
+                                        "os": "Android",
+                                        "manufacturer": "Android",
+                                        "serial": "",
+                                        "connection": "USB Cable",
+                                        "status": "connected",
+                                        "can_adb_sync": False
+                                    })
+                                    break
+                except Exception:
+                    pass
+                _last_win_pnp_scan = now
+            devices.extend(_cached_win_pnp_devices)
     elif CURRENT_OS == "Linux":
         try:
             p = subprocess.run(["lsusb"], capture_output=True, text=True, timeout=3)
@@ -629,11 +741,12 @@ def sync_to_android_device(device_id: Optional[str] = None, file_paths: Optional
 
     target_files = file_paths
     if not target_files:
-        from downloader import DOWNLOAD_DIR
-        target_files = [
-            os.path.join(DOWNLOAD_DIR, f) for f in os.listdir(DOWNLOAD_DIR)
-            if f.lower().endswith(('.mp3', '.m4a', '.flac', '.wav', '.mp4'))
-        ]
+        default_dir = get_default_download_dir()
+        if os.path.isdir(default_dir):
+            target_files = [
+                os.path.join(default_dir, f) for f in os.listdir(default_dir)
+                if f.lower().endswith(('.mp3', '.m4a', '.flac', '.wav', '.mp4'))
+            ]
 
     if not target_files:
         return {"success": False, "message": "لا توجد ملفات صوتية لتحميلها. قم بتحميل بعض المقاطع أولاً!"}
@@ -642,16 +755,16 @@ def sync_to_android_device(device_id: Optional[str] = None, file_paths: Optional
     remote_dir = f"/sdcard/Music/{clean_playlist}"
 
     try:
-        subprocess.run([adb_bin, "-s", target_id, "shell", "mkdir", "-p", remote_dir], capture_output=True, timeout=5)
+        run_silent_cmd([adb_bin, "-s", target_id, "shell", "mkdir", "-p", remote_dir], capture_output=True, timeout=5)
 
         synced = 0
         for fpath in target_files:
             if os.path.isfile(fpath):
                 fname = os.path.basename(fpath)
-                p = subprocess.run([adb_bin, "-s", target_id, "push", fpath, f"{remote_dir}/{fname}"], capture_output=True, text=True, timeout=30)
+                p = run_silent_cmd([adb_bin, "-s", target_id, "push", fpath, f"{remote_dir}/{fname}"], capture_output=True, text=True, timeout=30)
                 if p.returncode == 0:
                     synced += 1
-                    subprocess.run([
+                    run_silent_cmd([
                         adb_bin, "-s", target_id, "shell", "am", "broadcast",
                         "-a", "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
                         "-d", f"file://{remote_dir}/{fname}"
@@ -808,7 +921,7 @@ def choose_folder_dialog(initial_dir: Optional[str] = None) -> Optional[str]:
         }
         '''
         try:
-            p = subprocess.run(["powershell", "-NoProfile", "-Command", ps_cmd], capture_output=True, text=True)
+            p = run_silent_cmd(["powershell", "-NoProfile", "-Command", ps_cmd], capture_output=True, text=True)
             path = p.stdout.strip()
             if path and os.path.isdir(path):
                 return path

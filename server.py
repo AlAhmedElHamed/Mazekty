@@ -1,11 +1,14 @@
 import os
 import sys
+import time
 import json
 import uuid
 import asyncio
 import subprocess
 import traceback
+from collections import defaultdict
 from typing import List, Dict, Any, Optional
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, BackgroundTasks, UploadFile, File, Form, Request
 from fastapi.staticfiles import StaticFiles
@@ -30,18 +33,38 @@ from platform_utils import (
     trigger_finder_ios_sync
 )
 
-app = FastAPI(title="مزيكتي - Mazekty")
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    global main_event_loop, queue_worker_task, download_queue, queue_resume_event
+    # Initialize asyncio objects inside the running loop
+    download_queue = asyncio.Queue()
+    queue_resume_event = asyncio.Event()
+    queue_resume_event.set()
+    main_event_loop = asyncio.get_running_loop()
+    queue_worker_task = asyncio.create_task(queue_worker())
+    yield
+    if queue_worker_task:
+        queue_worker_task.cancel()
+
+app = FastAPI(title="مزيكتي - Mazekty", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+if getattr(sys, 'frozen', False):
+    BASE_DIR = getattr(sys, '_MEIPASS', os.path.dirname(sys.executable))
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 STATIC_DIR = os.path.join(BASE_DIR, "static")
+if not os.path.exists(STATIC_DIR) and getattr(sys, 'frozen', False):
+    STATIC_DIR = os.path.join(os.path.dirname(sys.executable), "static")
+
 CONFIG_FILE = get_config_path()
 
 def load_config() -> Dict[str, Any]:
@@ -71,6 +94,35 @@ def save_config(updates: Dict[str, Any]):
         print(f"Could not save config to {CONFIG_FILE}: {e}")
     return cfg
 
+def validate_file_path(target_dir: str, filename: str) -> str:
+    """Validates that filename resolves within target_dir, preventing path traversal."""
+    resolved = os.path.realpath(os.path.join(target_dir, filename))
+    if not resolved.startswith(os.path.realpath(target_dir) + os.sep) and resolved != os.path.realpath(target_dir):
+        raise HTTPException(status_code=400, detail="Invalid file path")
+    return resolved
+
+class SimpleRateLimiter:
+    """In-memory sliding window rate limiter for public-facing API endpoints."""
+    def __init__(self, max_requests: int = 60, window_seconds: float = 60.0):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests: Dict[str, List[float]] = defaultdict(list)
+
+    def is_allowed(self, client_ip: str) -> bool:
+        now = time.time()
+        cutoff = now - self.window_seconds
+        timestamps = [t for t in self.requests[client_ip] if t > cutoff]
+        if len(timestamps) >= self.max_requests:
+            self.requests[client_ip] = timestamps
+            return False
+        timestamps.append(now)
+        self.requests[client_ip] = timestamps
+        return True
+
+search_limiter = SimpleRateLimiter(max_requests=40, window_seconds=60.0)
+download_limiter = SimpleRateLimiter(max_requests=60, window_seconds=60.0)
+analyze_limiter = SimpleRateLimiter(max_requests=30, window_seconds=60.0)
+
 initial_cfg = load_config()
 DEFAULT_DOWNLOAD_DIR = os.path.abspath(initial_cfg.get("download_folder", get_default_download_dir(BASE_DIR)))
 os.makedirs(DEFAULT_DOWNLOAD_DIR, exist_ok=True)
@@ -97,15 +149,14 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
-# Queue and State
-download_queue: asyncio.Queue = asyncio.Queue()
+# Queue and State (initialized in lifespan to avoid asyncio issues on Python 3.12+)
+download_queue: Optional[asyncio.Queue] = None
 queue_worker_task: Optional[asyncio.Task] = None
 main_event_loop: Optional[asyncio.AbstractEventLoop] = None
 
 # Queue Pause / Cancel controls
 is_queue_paused: bool = False
-queue_resume_event: asyncio.Event = asyncio.Event()
-queue_resume_event.set()
+queue_resume_event: Optional[asyncio.Event] = None
 cancelled_item_ids = set()
 
 session_stats = {
@@ -139,6 +190,7 @@ async def queue_worker():
                 "title": item["title"],
                 "stats": session_stats
             })
+            cancelled_item_ids.discard(item_id)
             download_queue.task_done()
             continue
 
@@ -278,17 +330,10 @@ async def queue_worker():
             })
         finally:
             download_queue.task_done()
-
-@app.on_event("startup")
-async def startup_event():
-    global main_event_loop, queue_worker_task
-    main_event_loop = asyncio.get_running_loop()
-    queue_worker_task = asyncio.create_task(queue_worker())
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    if queue_worker_task:
-        queue_worker_task.cancel()
+            if len(all_items) > 500:
+                finished_keys = [k for k, v in list(all_items.items()) if v.get("status") in ("completed", "skipped", "cancelled", "error")]
+                for k in finished_keys[:len(all_items) - 200]:
+                    all_items.pop(k, None)
 
 # ==========================================
 # REQUEST MODELS
@@ -395,6 +440,34 @@ class ConfigUpdateRequest(BaseModel):
     theme_accent: Optional[str] = None
     theme_mode: Optional[str] = None
 
+class RetrySingleRequest(BaseModel):
+    item_id: str
+    quality: Optional[str] = None
+    audio_format: Optional[str] = None
+
+class SaveLrcRequest(BaseModel):
+    filename: str
+    lyrics: str
+    folder: Optional[str] = None
+
+class MergeTracksRequest(BaseModel):
+    filenames: List[str]
+    crossfade: float = 4.0
+    output_filename: Optional[str] = None
+    folder: Optional[str] = None
+
+class DenoiseRequest(BaseModel):
+    filename: str
+    folder: Optional[str] = None
+
+class StemsRequest(BaseModel):
+    filename: str
+    folder: Optional[str] = None
+
+class IdentifyRequest(BaseModel):
+    filename: str
+    folder: Optional[str] = None
+
 # ==========================================
 # QUEUE CONTROL ENDPOINTS (FREE FEATURE)
 # ==========================================
@@ -431,6 +504,72 @@ async def get_queue_status():
         "stats": session_stats
     }
 
+@app.post("/api/queue/reset-stats")
+async def reset_queue_stats():
+    global session_stats
+    session_stats = {"total": 0, "completed": 0, "skipped": 0, "failed": 0, "in_progress": 0}
+    all_items.clear()
+    cancelled_item_ids.clear()
+    await manager.broadcast({"event": "stats_reset", "stats": session_stats})
+    return {"status": "reset"}
+
+@app.post("/api/queue/clear-completed")
+async def clear_completed_queue():
+    to_remove = [k for k, v in list(all_items.items()) if v.get("status") in ("completed", "skipped", "cancelled", "error")]
+    for k in to_remove:
+        all_items.pop(k, None)
+    await manager.broadcast({"event": "items_cleared", "cleared_ids": to_remove})
+    return {"status": "cleared", "count": len(to_remove)}
+
+@app.post("/api/queue/retry-failed")
+async def retry_failed_downloads():
+    global session_stats
+    retried_items = []
+    for item_id, item in list(all_items.items()):
+        if item.get("status") == "error":
+            item["status"] = "queued"
+            item.pop("error", None)
+            session_stats["failed"] = max(0, session_stats["failed"] - 1)
+            await download_queue.put(item)
+            retried_items.append(item)
+
+    if retried_items:
+        await manager.broadcast({
+            "event": "items_queued",
+            "items": retried_items,
+            "stats": session_stats,
+            "queue_size": download_queue.qsize()
+        })
+    return {"status": "retried", "count": len(retried_items)}
+
+@app.post("/api/queue/retry-single")
+async def retry_single_download(req: RetrySingleRequest):
+    global session_stats
+    if req.item_id not in all_items:
+        raise HTTPException(status_code=404, detail="Item not found in queue")
+
+    item = all_items[req.item_id]
+    if item.get("status") == "error":
+        session_stats["failed"] = max(0, session_stats["failed"] - 1)
+
+    if req.quality:
+        item["quality"] = req.quality
+    if req.audio_format:
+        item["audio_format"] = req.audio_format
+
+    item["status"] = "queued"
+    item.pop("error", None)
+    cancelled_item_ids.discard(req.item_id)
+    await download_queue.put(item)
+
+    await manager.broadcast({
+        "event": "items_queued",
+        "items": [item],
+        "stats": session_stats,
+        "queue_size": download_queue.qsize()
+    })
+    return {"status": "retried", "item": item}
+
 # ==========================================
 # CONFIG & SYSTEM ENDPOINTS
 # ==========================================
@@ -459,7 +598,8 @@ async def update_config(req: ConfigUpdateRequest):
 async def select_folder():
     cfg = load_config()
     current_dir = cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
-    chosen = choose_folder_dialog(initial_dir=current_dir)
+    loop = asyncio.get_running_loop()
+    chosen = await loop.run_in_executor(None, lambda: choose_folder_dialog(initial_dir=current_dir))
     if chosen:
         save_config({"download_folder": chosen})
         return {"folder": chosen}
@@ -494,7 +634,7 @@ async def save_tags_endpoint(req: TagEditRequest):
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
 
-    tags = {k: v for k, v in req.dict().items() if k not in ["filename", "folder"] and v is not None}
+    tags = {k: v for k, v in req.model_dump().items() if k not in ["filename", "folder"] and v is not None}
     success = YouTubeDownloader.save_audio_tags(file_path, tags)
     if success:
         return {"status": "success", "tags": tags}
@@ -686,10 +826,106 @@ async def replace_artwork_endpoint(
             os.remove(temp_img_path)
 
 @app.get("/api/lyrics")
-async def get_lyrics_endpoint(url: str):
+async def get_lyrics_endpoint(title: Optional[str] = None, artist: Optional[str] = None, url: Optional[str] = None):
     loop = asyncio.get_running_loop()
-    res = await loop.run_in_executor(None, lambda: YouTubeDownloader.extract_lyrics(url))
-    return res
+    if title:
+        res = await loop.run_in_executor(None, lambda: YouTubeDownloader.fetch_synced_lyrics(title, artist))
+        if res.get("found"):
+            return res
+    if url:
+        yt_res = await loop.run_in_executor(None, lambda: YouTubeDownloader.extract_lyrics(url))
+        return yt_res
+    return {"found": False, "error": "No lyrics found"}
+
+@app.post("/api/lyrics/save-lrc")
+async def save_lrc_endpoint(req: SaveLrcRequest):
+    cfg = load_config()
+    target_dir = os.path.abspath(req.folder) if req.folder and req.folder.strip() else cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
+    file_path = os.path.join(target_dir, req.filename)
+    loop = asyncio.get_running_loop()
+    try:
+        lrc_file = await loop.run_in_executor(None, lambda: YouTubeDownloader.save_lrc_file(file_path, req.lyrics))
+        return {"status": "success", "file": os.path.basename(lrc_file)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/studio/merge")
+async def merge_tracks_endpoint(req: MergeTracksRequest):
+    cfg = load_config()
+    target_dir = os.path.abspath(req.folder) if req.folder and req.folder.strip() else cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
+    full_paths = [os.path.join(target_dir, f) for f in req.filenames]
+    out_name = req.output_filename or f"Mazekty_DJ_Mix_{int(time.time())}.mp3"
+    if not out_name.lower().endswith(".mp3"):
+        out_name += ".mp3"
+    out_path = os.path.join(target_dir, out_name)
+
+    loop = asyncio.get_running_loop()
+    try:
+        await loop.run_in_executor(
+            None,
+            lambda: YouTubeDownloader.merge_audio_tracks(full_paths, req.crossfade, out_path)
+        )
+        return {"status": "success", "filename": out_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/studio/denoise")
+async def denoise_endpoint(req: DenoiseRequest):
+    cfg = load_config()
+    target_dir = os.path.abspath(req.folder) if req.folder and req.folder.strip() else cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
+    input_file = os.path.join(target_dir, req.filename)
+    if not os.path.exists(input_file):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    base, _ = os.path.splitext(req.filename)
+    out_name = f"{base}_denoised.mp3"
+    out_path = os.path.join(target_dir, out_name)
+
+    loop = asyncio.get_running_loop()
+    try:
+        await loop.run_in_executor(
+            None,
+            lambda: YouTubeDownloader.denoise_audio(input_file, out_path)
+        )
+        return {"status": "success", "filename": out_name}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/studio/stems")
+async def stems_endpoint(req: StemsRequest):
+    cfg = load_config()
+    target_dir = os.path.abspath(req.folder) if req.folder and req.folder.strip() else cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
+    input_file = os.path.join(target_dir, req.filename)
+    if not os.path.exists(input_file):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    loop = asyncio.get_running_loop()
+    try:
+        res = await loop.run_in_executor(
+            None,
+            lambda: YouTubeDownloader.separate_stems(input_file, target_dir)
+        )
+        return {"status": "success", "stems": res}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/studio/identify")
+async def identify_endpoint(req: IdentifyRequest):
+    cfg = load_config()
+    target_dir = os.path.abspath(req.folder) if req.folder and req.folder.strip() else cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
+    input_file = os.path.join(target_dir, req.filename)
+    if not os.path.exists(input_file):
+        raise HTTPException(status_code=404, detail="File not found")
+
+    loop = asyncio.get_running_loop()
+    try:
+        res = await loop.run_in_executor(
+            None,
+            lambda: YouTubeDownloader.identify_audio(input_file)
+        )
+        return res
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ==========================================
 # SCHEDULED DOWNLOAD TIMER (PRO FEATURE)
@@ -709,8 +945,8 @@ async def run_delayed_download(delay_sec: int, req: DownloadRequest):
     )
 
 @app.post("/api/schedule-download")
-async def schedule_download_endpoint(req: ScheduleDownloadRequest, background_tasks: BackgroundTasks):
-    background_tasks.add_task(run_delayed_download, req.delay_seconds, req.download_request)
+async def schedule_download_endpoint(req: ScheduleDownloadRequest):
+    asyncio.create_task(run_delayed_download(req.delay_seconds, req.download_request))
     return {
         "status": "scheduled",
         "delay_seconds": req.delay_seconds,
@@ -722,7 +958,10 @@ async def schedule_download_endpoint(req: ScheduleDownloadRequest, background_ta
 # ==========================================
 
 @app.post("/api/search")
-async def search_youtube_endpoint(req: SearchRequest):
+async def search_youtube_endpoint(req: SearchRequest, request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if not search_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many search requests. Please wait a moment.")
     query = req.query.strip()
     if not query:
         return {"results": []}
@@ -907,7 +1146,10 @@ async def trigger_android_sync_endpoint(req: Optional[SyncAndroidRequest] = None
     return res
 
 @app.post("/api/analyze")
-async def analyze_url(req: AnalyzeRequest):
+async def analyze_url(req: AnalyzeRequest, request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if not analyze_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many analyze requests. Please wait a moment.")
     urls = YouTubeDownloader.clean_urls(req.url)
     if not urls:
         raise HTTPException(status_code=400, detail="لم يتم العثور على روابط صالحة")
@@ -977,7 +1219,10 @@ async def async_resolve_and_enqueue(
     })
 
 @app.post("/api/download")
-async def start_download(req: DownloadRequest, background_tasks: BackgroundTasks):
+async def start_download(req: DownloadRequest, request: Request):
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    if not download_limiter.is_allowed(client_ip):
+        raise HTTPException(status_code=429, detail="Too many download requests. Please wait a moment.")
     urls = YouTubeDownloader.clean_urls(req.urls)
     if not urls:
         raise HTTPException(status_code=400, detail="يرجى إدخال رابط يوتيوب واحد على الأقل")
@@ -988,16 +1233,17 @@ async def start_download(req: DownloadRequest, background_tasks: BackgroundTasks
 
     save_config({"download_folder": target_folder})
 
-    background_tasks.add_task(
-        async_resolve_and_enqueue,
-        urls_raw=req.urls,
-        quality=req.quality,
-        audio_format=req.audio_format or "mp3",
-        embed_thumb=req.embed_thumbnail,
-        embed_meta=req.embed_metadata,
-        folder=target_folder,
-        rate_limit_kbps=req.rate_limit_kbps,
-        selected_urls=req.selected_urls
+    asyncio.create_task(
+        async_resolve_and_enqueue(
+            urls_raw=req.urls,
+            quality=req.quality,
+            audio_format=req.audio_format or "mp3",
+            embed_thumb=req.embed_thumbnail,
+            embed_meta=req.embed_metadata,
+            folder=target_folder,
+            rate_limit_kbps=req.rate_limit_kbps,
+            selected_urls=req.selected_urls
+        )
     )
 
     return {
@@ -1037,7 +1283,7 @@ async def list_downloads(folder: Optional[str] = None):
 async def get_audio_file(filename: str, folder: Optional[str] = None):
     cfg = load_config()
     target_dir = os.path.abspath(folder) if folder and folder.strip() else cfg.get("download_folder", DEFAULT_DOWNLOAD_DIR)
-    file_path = os.path.join(target_dir, filename)
+    file_path = validate_file_path(target_dir, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="الملف غير موجود")
     
@@ -1069,8 +1315,44 @@ async def websocket_endpoint(websocket: WebSocket):
         })
         while True:
             data = await websocket.receive_text()
+            if not data:
+                continue
             if data == "ping":
                 await websocket.send_text("pong")
+                continue
+
+            # Process structured JSON WebSocket messages
+            try:
+                msg = json.loads(data)
+                action = msg.get("action")
+                if action == "ping":
+                    await websocket.send_json({"event": "pong"})
+                elif action == "get_state":
+                    current_cfg = load_config()
+                    current_cfg["os_name"] = get_os_name()
+                    await websocket.send_json({
+                        "event": "state_snapshot",
+                        "stats": session_stats,
+                        "queue_size": download_queue.qsize() if download_queue else 0,
+                        "is_paused": is_queue_paused,
+                        "config": current_cfg,
+                        "items": list(all_items.values())[-50:]
+                    })
+                elif action == "get_stats":
+                    await websocket.send_json({
+                        "event": "stats_update",
+                        "stats": session_stats
+                    })
+                else:
+                    await websocket.send_json({
+                        "event": "error",
+                        "message": f"Unsupported action: {action}"
+                    })
+            except json.JSONDecodeError:
+                await websocket.send_json({
+                    "event": "error",
+                    "message": "Malformed message format, expected valid JSON or 'ping'"
+                })
     except WebSocketDisconnect:
         manager.disconnect(websocket)
     except Exception:

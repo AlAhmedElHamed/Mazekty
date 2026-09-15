@@ -1,6 +1,9 @@
 import os
 import re
 import sys
+import json
+import urllib.request
+import urllib.parse
 import subprocess
 import unicodedata
 from typing import Callable, Optional, Dict, Any, List
@@ -9,13 +12,13 @@ from yt_dlp.utils import sanitize_filename
 
 try:
     import mutagen
-    from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, TCON, APIC, ID3NoHeaderError
+    from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, TDRC, TCON, APIC, ID3NoHeaderError
     from mutagen.mp4 import MP4, MP4Cover
     from mutagen.flac import FLAC, Picture
 except ImportError:
     mutagen = None
 
-from platform_utils import find_ffmpeg, sync_to_system_music_library
+from platform_utils import find_ffmpeg, sync_to_system_music_library, run_silent_cmd
 
 FFMPEG_PATH = find_ffmpeg()
 
@@ -25,6 +28,17 @@ class YouTubeDownloader:
         os.makedirs(self.output_dir, exist_ok=True)
 
     @staticmethod
+    def normalize_url(url: str) -> str:
+        """Auto-append /videos to YouTube channel URLs to download all uploads."""
+        url = url.strip()
+        # YouTube Channel pattern: @channel, /c/name, /channel/UC..., /user/name
+        chan_pattern = r'^(https?://(?:www\.)?youtube\.com/(@[\w\.-]+|channel/[\w-]+|c/[\w-]+|user/[\w-]+))/?$'
+        m = re.match(chan_pattern, url)
+        if m:
+            return f"{m.group(1)}/videos"
+        return url
+
+    @staticmethod
     def clean_urls(raw_input: str) -> List[str]:
         """Extract valid URLs from input string."""
         lines = re.split(r'[\r\n,]+', raw_input.strip())
@@ -32,8 +46,43 @@ class YouTubeDownloader:
         for line in lines:
             line = line.strip()
             if line.startswith("http://") or line.startswith("https://"):
-                urls.append(line)
+                urls.append(YouTubeDownloader.normalize_url(line))
         return urls
+
+    @staticmethod
+    def resolve_external_track_info(url: str) -> Optional[Dict[str, Any]]:
+        """Resolves Spotify or Apple Music track metadata to search on YouTube."""
+        try:
+            if "open.spotify.com" in url:
+                oembed_url = f"https://open.spotify.com/oembed?url={urllib.parse.quote(url)}"
+                req = urllib.request.Request(oembed_url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    data = json.loads(resp.read().decode('utf-8'))
+                    title = data.get('title', '')
+                    return {
+                        "title": title,
+                        "query": f"{title} audio",
+                        "thumbnail": data.get('thumbnail_url'),
+                        "source": "spotify"
+                    }
+            elif "music.apple.com" in url:
+                req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    html = resp.read().decode('utf-8', errors='ignore')
+                    og_title = re.search(r'<meta\s+property=["\']og:title["\']\s+content=["\']([^"\']+)["\']', html)
+                    og_desc = re.search(r'<meta\s+property=["\']og:description["\']\s+content=["\']([^"\']+)["\']', html)
+                    if og_title:
+                        t = og_title.group(1).replace("&#39;", "'").replace("&amp;", "&")
+                        d = og_desc.group(1) if og_desc else ""
+                        return {
+                            "title": t,
+                            "query": f"{t} {d} audio",
+                            "thumbnail": None,
+                            "source": "applemusic"
+                        }
+        except Exception as e:
+            print(f"External metadata resolution error: {e}")
+        return None
 
     @staticmethod
     def normalize_string(s: str) -> str:
@@ -114,7 +163,7 @@ class YouTubeDownloader:
         return results
 
     def resolve_urls(self, raw_input: str) -> List[Dict[str, Any]]:
-        """Resolve URLs into flat list of tracks with playlist support."""
+        """Resolve URLs into flat list of tracks with channel, playlist, Spotify & SoundCloud support."""
         urls = self.clean_urls(raw_input)
         resolved = []
 
@@ -127,14 +176,36 @@ class YouTubeDownloader:
 
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             for url in urls:
+                # 1. Spotify & Apple Music Resolver
+                if "open.spotify.com" in url or "music.apple.com" in url:
+                    ext_info = self.resolve_external_track_info(url)
+                    if ext_info and ext_info.get("query"):
+                        matches = self.search_youtube(ext_info["query"], limit=1)
+                        if matches:
+                            m = matches[0]
+                            resolved.append({
+                                "url": m["url"],
+                                "title": ext_info.get("title") or m["title"],
+                                "is_playlist": False,
+                                "duration": m.get("duration"),
+                                "thumbnail": ext_info.get("thumbnail") or m.get("thumbnail"),
+                                "uploader": m.get("uploader", ""),
+                                "original_url": url,
+                                "source": ext_info.get("source", "external")
+                            })
+                            continue
+
+                # 2. YouTube, SoundCloud & Generic extractors
                 try:
                     info = ydl.extract_info(url, download=False)
                     if not info:
                         resolved.append({"url": url, "title": "فيديو يوتيوب", "is_playlist": False})
                         continue
 
+                    is_channel = bool(re.search(r'youtube\.com/(@[\w\.-]+|channel/[\w-]+|c/[\w-]+|user/[\w-]+)', url))
+
                     if 'entries' in info and info['entries']:
-                        playlist_title = info.get('title', 'قائمة تشغيل')
+                        playlist_title = info.get('title', 'قناة' if is_channel else 'قائمة تشغيل')
                         entries = [e for e in info['entries'] if e]
                         total = len(entries)
                         for idx, e in enumerate(entries, start=1):
@@ -145,6 +216,7 @@ class YouTubeDownloader:
                                 "url": entry_url,
                                 "title": entry_title,
                                 "is_playlist": True,
+                                "is_channel": is_channel,
                                 "playlist_title": playlist_title,
                                 "playlist_index": idx,
                                 "playlist_total": total,
@@ -156,6 +228,7 @@ class YouTubeDownloader:
                             "url": info.get('webpage_url', url),
                             "title": info.get('title', 'فيديو يوتيوب'),
                             "is_playlist": False,
+                            "is_channel": False,
                             "duration": info.get('duration'),
                             "thumbnail": info.get('thumbnail'),
                             "uploader": info.get('uploader') or info.get('channel', '')
@@ -166,7 +239,8 @@ class YouTubeDownloader:
         return resolved
 
     def get_info(self, url: str) -> Dict[str, Any]:
-        """Fetch metadata preview for single video or playlist."""
+        """Fetch metadata preview for single video, channel, or playlist."""
+        norm_url = self.normalize_url(url)
         ydl_opts = {
             'quiet': True,
             'no_warnings': True,
@@ -174,17 +248,35 @@ class YouTubeDownloader:
             'skip_download': True,
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=False)
+            # Check for Spotify / Apple Music
+            if "open.spotify.com" in norm_url or "music.apple.com" in norm_url:
+                ext_info = self.resolve_external_track_info(norm_url)
+                if ext_info:
+                    return {
+                        "is_playlist": False,
+                        "is_channel": False,
+                        "id": "external",
+                        "title": ext_info.get("title", "Unknown Track"),
+                        "thumbnail": ext_info.get("thumbnail"),
+                        "uploader": ext_info.get("source", "External"),
+                        "url": norm_url
+                    }
+
+            info = ydl.extract_info(norm_url, download=False)
             if not info:
                 raise ValueError("تعذر جلب معلومات هذا الرابط")
 
-            is_playlist = 'entries' in info and info['entries']
-            if is_playlist:
+            is_channel = bool(re.search(r'youtube\.com/(@[\w\.-]+|channel/[\w-]+|c/[\w-]+|user/[\w-]+)', norm_url))
+            is_playlist = ('entries' in info and info['entries']) or is_channel
+
+            if is_playlist and 'entries' in info:
                 entries = list(info.get('entries', []))
+                default_title = "قناة يوتيوب" if is_channel else "قائمة تشغيل"
                 return {
                     "is_playlist": True,
+                    "is_channel": is_channel,
                     "id": info.get('id'),
-                    "title": info.get('title', 'قائمة تشغيل غير معنونة'),
+                    "title": info.get('title', default_title),
                     "count": len(entries),
                     "entries": [
                         {
@@ -199,12 +291,13 @@ class YouTubeDownloader:
             else:
                 return {
                     "is_playlist": False,
+                    "is_channel": False,
                     "id": info.get('id'),
                     "title": info.get('title', 'فيديو يوتيوب'),
                     "duration": info.get('duration'),
                     "thumbnail": info.get('thumbnail'),
                     "uploader": info.get('uploader') or info.get('channel', ''),
-                    "url": info.get('webpage_url', url)
+                    "url": info.get('webpage_url', norm_url)
                 }
 
     def download_item(
@@ -219,7 +312,7 @@ class YouTubeDownloader:
         progress_hook: Optional[Callable[[Dict[str, Any]], None]] = None,
         postprocessor_hook: Optional[Callable[[Dict[str, Any]], None]] = None
     ) -> Dict[str, Any]:
-        """Download a single item with format, speed limit, and tag embedding."""
+        """Download a single item with format, speed limit, tag embedding, and smart fallback."""
         target_dir = os.path.abspath(custom_folder) if custom_folder else self.output_dir
         os.makedirs(target_dir, exist_ok=True)
 
@@ -231,10 +324,15 @@ class YouTubeDownloader:
             'quiet': True,
             'no_warnings': True,
             'ignoreerrors': False,
-            'nocheckcertificate': True,
+            'nocheckcertificate': False,
             'overwrites': False,
             'noplaylist': True,
         }
+
+        # Set ffmpeg_location so yt-dlp finds portable or local FFmpeg
+        current_ffmpeg = find_ffmpeg()
+        if current_ffmpeg and current_ffmpeg != "ffmpeg" and os.path.isabs(current_ffmpeg):
+            ydl_opts['ffmpeg_location'] = os.path.dirname(current_ffmpeg)
 
         # Bandwidth Limiter
         if rate_limit_kbps and rate_limit_kbps > 0:
@@ -282,9 +380,29 @@ class YouTubeDownloader:
             pp_hooks.append(postprocessor_hook)
         ydl_opts['postprocessor_hooks'] = pp_hooks
 
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            return info
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=True)
+                return info
+        except Exception as first_err:
+            # Smart Fallback: If custom format / high bitrate failed, fallback to standard MP3 192k
+            if not is_video and (quality in ["320", "256"] or audio_format in ["flac", "wav", "m4a"]):
+                try:
+                    fallback_opts = dict(ydl_opts)
+                    fallback_opts['postprocessors'] = [{
+                        'key': 'FFmpegExtractAudio',
+                        'preferredcodec': 'mp3',
+                        'preferredquality': '192',
+                    }]
+                    if embed_metadata:
+                        fallback_opts['postprocessors'].append({'key': 'FFmpegMetadata'})
+                    fallback_opts['format'] = 'bestaudio/best'
+                    with yt_dlp.YoutubeDL(fallback_opts) as ydl:
+                        info = ydl.extract_info(url, download=True)
+                        return info
+                except Exception:
+                    pass
+            raise first_err
 
     # ==========================================
     # PRO & ADVANCED AUDIO ENGINEERING METHODS
@@ -310,7 +428,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"FFmpeg trim error: {res.stderr}")
         return True
@@ -338,7 +456,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"FFmpeg audio enhancement error: {res.stderr}")
         return True
@@ -364,7 +482,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"Vocal remover error: {res.stderr}")
         return True
@@ -381,7 +499,24 @@ class YouTubeDownloader:
         # pitch_semitones: e.g. +2 (2 semitones up), -3 (3 semitones down)
         # pitch factor: 2^(semitones / 12)
         pitch_factor = 2.0 ** (pitch_semitones / 12.0)
-        new_sample_rate = int(44100 * pitch_factor)
+
+        # Detect original sample rate via ffprobe
+        original_sr = 44100
+        try:
+            from platform_utils import find_ffprobe
+            ffprobe_path = find_ffprobe()
+            probe_cmd = [
+                ffprobe_path, "-v", "quiet", "-select_streams", "a:0",
+                "-show_entries", "stream=sample_rate",
+                "-of", "default=noprint_wrappers=1:nokey=1", input_file
+            ]
+            probe_res = run_silent_cmd(probe_cmd, capture_output=True, text=True, timeout=5)
+            if probe_res.returncode == 0 and probe_res.stdout.strip().isdigit():
+                original_sr = int(probe_res.stdout.strip())
+        except Exception:
+            pass
+
+        new_sample_rate = int(original_sr * pitch_factor)
 
         # To retain target speed, atempo must compensate for sample rate shift
         tempo_comp = speed_multiplier / pitch_factor
@@ -398,7 +533,7 @@ class YouTubeDownloader:
             filters.append("atempo=0.5")
             current_tempo /= 0.5
         filters.append(f"atempo={current_tempo:.4f}")
-        filters.append("aresample=44100")
+        filters.append(f"aresample={original_sr}")
 
         filter_str = ",".join(filters)
 
@@ -411,7 +546,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"Pitch/Speed error: {res.stderr}")
         return True
@@ -434,7 +569,8 @@ class YouTubeDownloader:
 
         gains = presets_gains.get(preset, presets_gains["bass_boost"])
         if custom_gains:
-            gains.update(custom_gains)
+            # Convert string keys from JSON to int to match preset gains
+            gains.update({int(k): v for k, v in custom_gains.items()})
 
         eq_filters = []
         for freq in bands:
@@ -453,7 +589,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"Equalizer error: {res.stderr}")
         return True
@@ -474,7 +610,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"8D audio error: {res.stderr}")
         return True
@@ -501,7 +637,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"Silence remove error: {res.stderr}")
         return True
@@ -521,7 +657,7 @@ class YouTubeDownloader:
             output_file
         ]
 
-        res = subprocess.run(cmd, capture_output=True, text=True)
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
         if res.returncode != 0:
             raise RuntimeError(f"Volume boost error: {res.stderr}")
         return True
@@ -563,7 +699,7 @@ class YouTubeDownloader:
             cmd.append(out_file)
 
             try:
-                res = subprocess.run(cmd, capture_output=True, text=True)
+                res = run_silent_cmd(cmd, capture_output=True, text=True)
                 if res.returncode == 0 and os.path.exists(out_file):
                     converted_count += 1
                 else:
@@ -623,7 +759,8 @@ class YouTubeDownloader:
                     if "TIT2" in audio: tags["title"] = str(audio["TIT2"].text[0])
                     if "TPE1" in audio: tags["artist"] = str(audio["TPE1"].text[0])
                     if "TALB" in audio: tags["album"] = str(audio["TALB"].text[0])
-                    if "TYER" in audio: tags["year"] = str(audio["TYER"].text[0])
+                    if "TDRC" in audio: tags["year"] = str(audio["TDRC"].text[0])
+                    elif "TYER" in audio: tags["year"] = str(audio["TYER"].text[0])
                     if "TCON" in audio: tags["genre"] = str(audio["TCON"].text[0])
                     tags["has_cover"] = any(k.startswith("APIC") for k in audio.keys())
                 except ID3NoHeaderError:
@@ -669,7 +806,7 @@ class YouTubeDownloader:
                 if "title" in tags: audio["TIT2"] = TIT2(encoding=3, text=tags["title"])
                 if "artist" in tags: audio["TPE1"] = TPE1(encoding=3, text=tags["artist"])
                 if "album" in tags: audio["TALB"] = TALB(encoding=3, text=tags["album"])
-                if "year" in tags: audio["TYER"] = TYER(encoding=3, text=str(tags["year"]))
+                if "year" in tags: audio["TDRC"] = TDRC(encoding=3, text=str(tags["year"]))
                 if "genre" in tags: audio["TCON"] = TCON(encoding=3, text=tags["genre"])
                 audio.save(file_path)
                 return True
@@ -752,35 +889,192 @@ class YouTubeDownloader:
         return False
 
     @staticmethod
-    def extract_lyrics(url: str) -> Dict[str, Any]:
-        """Fetch automatic or uploaded synchronized subtitles/lyrics via yt-dlp."""
-        ydl_opts = {
-            'skip_download': True,
-            'writesubtitles': True,
-            'writeautomaticsub': True,
-            'subtitleslangs': ['all'],
-            'quiet': True,
-            'no_warnings': True,
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            try:
-                info = ydl.extract_info(url, download=False)
-                subtitles = info.get('subtitles') or info.get('automatic_captions') or {}
-                available_langs = list(subtitles.keys())
-                lyrics_text = ""
-                # Find ar, en, or first available
-                chosen_lang = next((l for l in ['ar', 'en', 'ar-orig', 'en-orig'] if l in subtitles), None)
-                if not chosen_lang and available_langs:
-                    chosen_lang = available_langs[0]
+    def merge_audio_tracks(files: List[str], crossfade_sec: float, output_file: str) -> bool:
+        """Merges multiple audio tracks with smooth DJ crossfade."""
+        if not files or len(files) < 2:
+            raise ValueError("At least 2 audio files required to merge")
 
-                return {
-                    "has_lyrics": bool(chosen_lang),
-                    "language": chosen_lang,
-                    "available_languages": available_langs[:10],
-                    "title": info.get('title', '')
-                }
-            except Exception as e:
-                return {"has_lyrics": False, "error": str(e)}
+        for f in files:
+            if not os.path.exists(f):
+                raise FileNotFoundError(f"File not found: {f}")
+
+        cmd = [FFMPEG_PATH, "-y"]
+        for f in files:
+            cmd.extend(["-i", f])
+
+        filter_parts = []
+        n = len(files)
+        prev_label = "[0]"
+        for i in range(1, n):
+            next_label = f"[{i}]"
+            out_label = f"[a{i}]" if i < n - 1 else "[aout]"
+            filter_parts.append(f"{prev_label}{next_label}acrossfade=d={crossfade_sec}:c1=tri:c2=tri{out_label}")
+            prev_label = f"[a{i}]"
+
+        filter_complex = ";".join(filter_parts)
+        cmd.extend([
+            "-filter_complex", filter_complex,
+            "-map", "[aout]",
+            "-c:a", "libmp3lame",
+            "-b:a", "320k",
+            output_file
+        ])
+
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            raise RuntimeError(f"Merge error: {res.stderr}")
+        return True
+
+    @staticmethod
+    def denoise_audio(input_file: str, output_file: str) -> bool:
+        """FFT Adaptive De-Noiser & Voice Enhancer."""
+        if not os.path.exists(input_file):
+            raise FileNotFoundError("Audio file not found")
+
+        filter_str = "afftdn=nr=18:nf=-25:tn=1,highpass=f=75,lowpass=f=12000,volume=1.2"
+        cmd = [
+            FFMPEG_PATH, "-y",
+            "-i", input_file,
+            "-af", filter_str,
+            "-c:a", "libmp3lame",
+            "-b:a", "320k",
+            output_file
+        ]
+
+        res = run_silent_cmd(cmd, capture_output=True, text=True)
+        if res.returncode != 0:
+            raise RuntimeError(f"Denoise error: {res.stderr}")
+        return True
+
+    @staticmethod
+    def separate_stems(input_file: str, output_folder: Optional[str] = None) -> Dict[str, str]:
+        """Separates audio into 4 stems: Vocals, Music/Instruments, Bass, Drums."""
+        if not os.path.exists(input_file):
+            raise FileNotFoundError("Audio file not found")
+
+        folder = output_folder or os.path.dirname(input_file)
+        base = os.path.splitext(os.path.basename(input_file))[0]
+
+        vocals_file = os.path.join(folder, f"{base}_stems_vocals.mp3")
+        instruments_file = os.path.join(folder, f"{base}_stems_instruments.mp3")
+        bass_file = os.path.join(folder, f"{base}_stems_bass.mp3")
+        drums_file = os.path.join(folder, f"{base}_stems_drums.mp3")
+
+        # 1. Vocals (Mid-channel bandpass: 220Hz - 4200Hz center frequency)
+        run_silent_cmd([
+            FFMPEG_PATH, "-y", "-i", input_file,
+            "-af", "pan=mono|c0=0.5*c0+0.5*c1,highpass=f=220,lowpass=f=4200,volume=1.6",
+            "-c:a", "libmp3lame", "-b:a", "320k", vocals_file
+        ])
+
+        # 2. Instruments (Karaoke: center vocal cancellation)
+        run_silent_cmd([
+            FFMPEG_PATH, "-y", "-i", input_file,
+            "-af", "pan=stereo|c0=c0-c1|c1=c1-c0,volume=1.4",
+            "-c:a", "libmp3lame", "-b:a", "320k", instruments_file
+        ])
+
+        # 3. Bass (Low-pass sub-bass & bass guitar: < 220Hz)
+        run_silent_cmd([
+            FFMPEG_PATH, "-y", "-i", input_file,
+            "-af", "lowpass=f=220,volume=1.8",
+            "-c:a", "libmp3lame", "-b:a", "320k", bass_file
+        ])
+
+        # 4. Drums / Percussion (High-frequency transients: > 3500Hz)
+        run_silent_cmd([
+            FFMPEG_PATH, "-y", "-i", input_file,
+            "-af", "highpass=f=3500,volume=1.5",
+            "-c:a", "libmp3lame", "-b:a", "320k", drums_file
+        ])
+
+        return {
+            "vocals": os.path.basename(vocals_file),
+            "instruments": os.path.basename(instruments_file),
+            "bass": os.path.basename(bass_file),
+            "drums": os.path.basename(drums_file)
+        }
+
+    @staticmethod
+    def fetch_synced_lyrics(title: str, artist: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch synced .lrc lyrics from LRCLIB open database."""
+        clean_title = re.sub(r'\(.*?\)|\[.*?\]', '', title)
+        clean_title = re.sub(r'(?i)(official\s*(music\s*)?video|lyrics?|audio|hd|4k)', '', clean_title).strip()
+
+        query = f"{artist} {clean_title}".strip() if artist else clean_title
+        url = f"https://lrclib.net/api/search?q={urllib.parse.quote(query)}"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mazekty/2.5'})
+        try:
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                if data and isinstance(data, list) and len(data) > 0:
+                    best = data[0]
+                    for item in data:
+                        if item.get("syncedLyrics"):
+                            best = item
+                            break
+                    return {
+                        "found": True,
+                        "track_name": best.get("trackName"),
+                        "artist_name": best.get("artistName"),
+                        "album_name": best.get("albumName"),
+                        "duration": best.get("duration"),
+                        "synced_lyrics": best.get("syncedLyrics"),
+                        "plain_lyrics": best.get("plainLyrics")
+                    }
+        except Exception as e:
+            print(f"Lyrics search error: {e}")
+        return {"found": False, "error": "No lyrics found"}
+
+    @staticmethod
+    def save_lrc_file(target_path: str, synced_lyrics: str) -> str:
+        """Saves synced lyrics as a standard .lrc file matching audio filename."""
+        base, _ = os.path.splitext(target_path)
+        lrc_path = f"{base}.lrc"
+        with open(lrc_path, "w", encoding="utf-8") as f:
+            f.write(synced_lyrics)
+        return lrc_path
+
+    @staticmethod
+    def identify_audio(file_path: str) -> Dict[str, Any]:
+        """Identify unknown track, fetch tags, album art and year."""
+        if not os.path.exists(file_path):
+            raise FileNotFoundError("Audio file not found")
+
+        current_tags = YouTubeDownloader.get_audio_tags(file_path)
+        base_name = os.path.splitext(os.path.basename(file_path))[0]
+
+        query = current_tags.get("title") or base_name
+        if current_tags.get("artist"):
+            query = f"{current_tags['artist']} {query}"
+
+        query = re.sub(r'\(.*?\)|\[.*?\]', '', query)
+        query = re.sub(r'(?i)(official\s*(music\s*)?video|lyrics?|audio|hd|4k|1080p|remix|feat\.?|ft\.?)', '', query).strip()
+
+        url = f"https://itunes.apple.com/search?term={urllib.parse.quote(query)}&entity=song&limit=3"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mazekty/2.5'})
+        try:
+            with urllib.request.urlopen(req, timeout=6) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                results = data.get("results", [])
+                if results:
+                    top = results[0]
+                    artwork = top.get("artworkUrl100", "").replace("100x100bb.jpg", "1000x1000bb.jpg")
+                    year = top.get("releaseDate", "")[:4]
+                    return {
+                        "found": True,
+                        "title": top.get("trackName"),
+                        "artist": top.get("artistName"),
+                        "album": top.get("collectionName"),
+                        "year": year,
+                        "genre": top.get("primaryGenreName"),
+                        "artwork_url": artwork,
+                        "preview_url": top.get("previewUrl")
+                    }
+        except Exception as e:
+            print(f"Identify error: {e}")
+
+        return {"found": False, "query": query, "tags": current_tags}
 
     # ==========================================
     # SYSTEM MEDIA SYNC (CROSS-PLATFORM)

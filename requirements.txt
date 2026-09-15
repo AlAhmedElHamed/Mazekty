@@ -3,3 +3,6 @@ fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
 python-multipart>=0.0.9
 mutagen>=1.47.0
+
+# Optional: for icon generation (create_icon.py)
+# Pillow>=10.0.0

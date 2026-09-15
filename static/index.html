@@ -7,9 +7,33 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/AppIcon.png">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body class="macos-window">
+  <!-- Application Startup Splash Screen -->
+  <div class="splash-screen-overlay" id="appSplashScreen">
+    <div class="splash-content">
+      <div class="splash-logo-wrap">
+        <div class="splash-logo-pulse"></div>
+        <div class="splash-logo-circle">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+          </svg>
+        </div>
+      </div>
+      <h1 class="splash-brand-name">Mazekty</h1>
+      <div class="splash-badge-row">
+        <span class="splash-pro-pill">PRO STUDIO</span>
+        <span class="splash-version-tag">v2.5 • Offline Engine</span>
+      </div>
+      <div class="splash-progress-track">
+        <div class="splash-progress-fill" id="splashProgressFill"></div>
+      </div>
+      <div class="splash-status-text" id="splashStatusText" data-i18n="splash_loading">جاري تهيئة النظام والمحرك الصوتي...</div>
+    </div>
+  </div>
+
   <!-- Dynamic Ambient Background & Confetti -->
   <canvas id="bgCanvas" class="background-canvas"></canvas>
   <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
@@ -67,14 +91,32 @@
 
       <!-- Sidebar Footer Tools -->
       <div class="sidebar-footer">
+        <!-- Language Selector Dropdown List -->
+        <div class="sidebar-lang-container">
+          <label for="sidebarLangSelect" class="sidebar-lang-label">
+            <span>🌐</span>
+            <span data-i18n="lang_select_label">اللغة / Language</span>
+          </label>
+          <div class="lang-select-wrapper">
+            <select id="sidebarLangSelect" class="sidebar-lang-dropdown">
+              <option value="ar">🇪🇬 العربية</option>
+              <option value="en">🇬🇧 English</option>
+              <option value="es">🇪🇸 Español</option>
+              <option value="fr">🇫🇷 Français</option>
+              <option value="de">🇩🇪 Deutsch</option>
+              <option value="tr">🇹🇷 Türkçe</option>
+              <option value="pt">🇵🇹 Português</option>
+              <option value="ru">🇷🇺 Русский</option>
+            </select>
+            <span class="select-chevron">▾</span>
+          </div>
+        </div>
+
         <div class="quick-tools">
-          <button type="button" class="tool-circle-btn" id="btnToggleLang" title="تغيير اللغة / Switch Language">
-            <span class="lang-code" id="langBadge">EN</span>
-          </button>
-          <button type="button" class="tool-circle-btn" id="btnToggleSound" title="كتم / تشغيل المؤثرات">
+          <button type="button" class="tool-circle-btn" id="btnToggleSound" title="كتم / تشغيل المؤثرات" data-i18n-title="sound_toggle_title">
             <span id="soundIcon">🔊</span>
           </button>
-          <button type="button" class="tool-circle-btn" id="btnOpenSidebarFolder" title="فتح مجلد التنزيلات">
+          <button type="button" class="tool-circle-btn" id="btnOpenSidebarFolder" title="فتح مجلد التنزيلات" data-i18n-title="btn_open_finder">
             <span>📂</span>
           </button>
         </div>
@@ -87,6 +129,10 @@
 
     <!-- Main Content Stage -->
     <div class="main-stage">
+      <!-- Top Stage Indeterminate Progress Bar -->
+      <div class="top-progress-bar" id="topProgressBar">
+        <div class="top-progress-bar-fill" id="topProgressBarFill"></div>
+      </div>
       
       <!-- Top Stage Bar -->
       <header class="stage-header">
@@ -110,6 +156,11 @@
 
       <!-- Views Container -->
       <div class="stage-content-scroll">
+        <!-- View Loading Spinner Overlay -->
+        <div class="view-spinner-overlay" id="viewSpinnerOverlay">
+          <div class="spinner-dual-ring"></div>
+          <span class="spinner-text" id="viewSpinnerText" data-i18n="loading_view">جاري التحميل...</span>
+        </div>
 
         <!-- VIEW 1: DOWNLOADER (Free & Pro Core) -->
         <section class="view-panel active" id="view-downloader">
@@ -118,7 +169,7 @@
             <div class="card-header">
               <label for="urlInput" class="input-label">
                 <span class="animated-icon">🔗</span>
-                <span data-i18n="links_label">روابط اليوتيوب (فيديو، بلاي ليست، أو عدة روابط):</span>
+                <span data-i18n="links_label">روابط التحميل (فيديوهات، قوائم، قنوات كاملة، ساوند كلاود، أو سبوتيفاي):</span>
               </label>
               <div class="input-tools">
                 <button type="button" class="tool-btn hover-glow" id="btnPaste" data-i18n="btn_paste">📋 لصق من الحافظة</button>
@@ -126,11 +177,21 @@
               </div>
             </div>
 
+            <!-- Platform Quick Selector -->
+            <div class="platform-chips-row mb-2">
+              <span class="platform-chips-label" data-i18n="supported_platforms">المنصات المدعومة:</span>
+              <button type="button" class="platform-chip active" data-platform="all">🌐 الكل</button>
+              <button type="button" class="platform-chip" data-platform="youtube">🔴 YouTube (فيديو / قائمة / قناة)</button>
+              <button type="button" class="platform-chip soundcloud-chip" data-platform="soundcloud">🟠 SoundCloud</button>
+              <button type="button" class="platform-chip spotify-chip" data-platform="spotify">🟢 Spotify</button>
+            </div>
+
             <textarea 
               id="urlInput" 
               class="url-textarea glowing-focus" 
               rows="3" 
-              placeholder="ضع الرابط هنا... فيديو، قائمة تشغيل (Playlist)، أو عدة روابط (كل رابط في سطر)..."
+              placeholder="ضع الرابط هنا... فيديو، قائمة تشغيل، قناة كاملة (@channel)، ساوند كلاود، أو سبوتيفاي..."
+              data-i18n-placeholder="url_placeholder"
               dir="ltr"
             ></textarea>
 
@@ -139,31 +200,31 @@
               <div class="option-item">
                 <label for="formatSelect" class="option-label" data-i18n="format_label">صيغة التحميل (Format):</label>
                 <select id="formatSelect" class="select-control">
-                  <option value="mp3" selected>🎵 MP3 (الصوت القياسي العالمي)</option>
-                  <option value="m4a">🍎 M4A (Apple AAC عالي النقاوة)</option>
-                  <option value="flac">💎 FLAC (صوت نقي بدون فقد Lossless)</option>
-                  <option value="wav">🎙️ WAV (جودة ستوديو خام Studio Master)</option>
-                  <option value="mp4">🎬 MP4 (فيديو وصوت كامل HD Video)</option>
+                  <option value="mp3" selected data-i18n="opt_format_mp3">🎵 MP3 (الصوت القياسي العالمي)</option>
+                  <option value="m4a" data-i18n="opt_format_m4a">🍎 M4A (Apple AAC عالي النقاوة)</option>
+                  <option value="flac" data-i18n="opt_format_flac">💎 FLAC (صوت نقي بدون فقد Lossless)</option>
+                  <option value="wav" data-i18n="opt_format_wav">🎙️ WAV (جودة ستوديو خام Studio Master)</option>
+                  <option value="mp4" data-i18n="opt_format_mp4">🎬 MP4 (فيديو وصوت كامل HD Video)</option>
                 </select>
               </div>
 
               <div class="option-item" id="qualityWrapper">
                 <label for="qualitySelect" class="option-label" data-i18n="quality_label">جودة الصوت (Bitrate):</label>
                 <select id="qualitySelect" class="select-control">
-                  <option value="320" selected data-i18n-opt="q_320">⚡ 320 kbps (أعلى جودة صوت - Ultra HD)</option>
-                  <option value="256" data-i18n-opt="q_256">✨ 256 kbps (جودة ممتازة - High)</option>
-                  <option value="192" data-i18n-opt="q_192">🎵 192 kbps (جودة جيدة - Medium)</option>
-                  <option value="128" data-i18n-opt="q_128">📦 128 kbps (حجم أصغر - Standard)</option>
+                  <option value="320" selected data-i18n="opt_quality_320">⚡ 320 kbps (أعلى جودة صوت - Ultra HD)</option>
+                  <option value="256" data-i18n="opt_quality_256">✨ 256 kbps (جودة ممتازة - High)</option>
+                  <option value="192" data-i18n="opt_quality_192">🎵 192 kbps (جودة جيدة - Medium)</option>
+                  <option value="128" data-i18n="opt_quality_128">📦 128 kbps (حجم أصغر - Standard)</option>
                 </select>
               </div>
 
               <div class="option-item">
                 <label for="speedLimitSelect" class="option-label" data-i18n="speed_limit_label">محدد سرعة التنزيل:</label>
                 <select id="speedLimitSelect" class="select-control">
-                  <option value="0" selected data-i18n-opt="speed_unlimited">🚀 بلا حدود (أقصى سرعة)</option>
-                  <option value="1024">🌐 1 MB/s (متوسط للباقة)</option>
-                  <option value="3072">⚡ 3 MB/s (سريع وموزون)</option>
-                  <option value="512">🐌 500 KB/s (توفير الإنترنت)</option>
+                  <option value="0" selected data-i18n="opt_speed_unlimited">🚀 بلا حدود (أقصى سرعة)</option>
+                  <option value="3072" data-i18n="opt_speed_3mb">⚡ 3 MB/s (سريع وموزون)</option>
+                  <option value="1024" data-i18n="opt_speed_1mb">🌐 1 MB/s (متوسط للباقة)</option>
+                  <option value="512" data-i18n="opt_speed_500kb">🐌 500 KB/s (توفير الإنترنت)</option>
                 </select>
               </div>
             </div>
@@ -177,6 +238,14 @@
                 <input type="checkbox" id="embedMetadata" checked>
                 <span data-i18n="embed_meta">دمج بيانات الميتا والوسوم</span>
               </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="clipboardMonitorToggle">
+                <span data-i18n="clipboard_monitor">📋 مراقبة الحافظة التلقائية</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="autoRetryFailedToggle" checked>
+                <span data-i18n="auto_retry_end">🔄 إعادة محاولة الفاشل في النهاية</span>
+              </label>
               <div class="feature-tag glow-pulse">
                 <span data-i18n="skip_feature">⚡ تخطي المكرر تلقائياً</span>
               </div>
@@ -185,7 +254,7 @@
             <!-- Action Buttons Row -->
             <div class="actions-row mt-4">
               <button type="button" class="btn-action btn-analyze hover-lift" id="btnAnalyze">
-                <span data-i18n="btn_analyze">🔍 فحص الروابط / البلاي ليست</span>
+                <span data-i18n="btn_analyze">🔍 فحص الروابط / البلاي ليست / القناة</span>
               </button>
               <button type="button" class="btn-action btn-schedule hover-lift" id="btnScheduleModal">
                 <span>⏰</span>
@@ -204,7 +273,7 @@
           <div class="card preview-card glass-card hidden slide-down" id="previewCard">
             <div class="card-header">
               <div class="title-with-badge">
-                <h3 class="card-title" data-i18n="preview_title">نتائج فحص الروابط وقوائم التشغيل</h3>
+                <h3 class="card-title" data-i18n="preview_title">نتائج فحص الروابط وقوائم التشغيل والقنوات</h3>
                 <span id="playlistStatsBadge" class="glowing-badge"></span>
               </div>
               <div class="preview-actions">
@@ -214,11 +283,11 @@
               </div>
             </div>
 
-            <!-- Range Selector for Playlists -->
+            <!-- Range Selector for Playlists & Channels -->
             <div class="range-selector-row" id="rangeSelectorRow" style="display:none;">
               <span data-i18n="range_label">تحميل نطاق محدد من المقاطع:</span>
               <input type="number" id="rangeStart" class="text-control mini-input" value="1" min="1" />
-              <span>إلى</span>
+              <span data-i18n="range_to">إلى</span>
               <input type="number" id="rangeEnd" class="text-control mini-input" value="10" min="1" />
               <button type="button" class="tool-btn highlight" id="btnApplyRange" data-i18n="btn_apply_range">تطبيق النطاق</button>
             </div>
@@ -233,7 +302,7 @@
             </div>
           </div>
 
-          <!-- Active Queue Card with Pause/Resume -->
+          <!-- Active Queue Card with Pause/Resume & Retry -->
           <div class="card queue-card glass-card">
             <div class="card-header">
               <div class="header-left-title">
@@ -241,6 +310,10 @@
                 <span class="card-title" data-i18n="queue_title">طابور التنزيل والمتابعة اللحظية</span>
               </div>
               <div class="header-right-tools">
+                <button type="button" class="tool-btn danger hover-glow" id="btnRetryFailed" title="إعادة محاولة جميع التنزيلات التي فشلت">
+                  <span>🔄</span>
+                  <span data-i18n="btn_retry_failed">إعادة محاولة الفاشل</span>
+                </button>
                 <button type="button" class="tool-btn highlight hover-glow" id="btnPauseResumeQueue" title="إيقاف مؤقت أو استئناف الطابور">
                   <span id="pauseQueueIcon">⏸️</span>
                   <span id="pauseQueueText" data-i18n="btn_pause_queue">إيقاف مؤقت</span>
@@ -275,7 +348,7 @@
             </div>
 
             <div class="search-input-wrap">
-              <input type="text" id="searchInput" class="search-field" placeholder="ابحث باسم الأغنية أو الفنان... (مثال: عمرو دياب، Adele، تراك هادئ)..." dir="auto" />
+              <input type="text" id="searchInput" class="search-field" placeholder="ابحث باسم الأغنية أو الفنان... (مثال: عمرو دياب، Adele، تراك هادئ)..." data-i18n-placeholder="search_input_placeholder" dir="auto" />
               <button type="button" class="btn-action btn-search-go hover-lift" id="btnSearchGo">
                 <span>🔍</span>
                 <span data-i18n="btn_search_now">بحث الآن</span>
@@ -318,7 +391,7 @@
 
             <!-- Search, Filter & Sort Controls -->
             <div class="library-filter-row">
-              <input type="text" id="libraryFilterInput" class="filter-control flex-1" placeholder="تصفية والبحث في الملفات بالاسم..." dir="auto" />
+              <input type="text" id="libraryFilterInput" class="filter-control flex-1" placeholder="تصفية والبحث في الملفات بالاسم..." data-i18n-placeholder="library_filter_placeholder" dir="auto" />
               <select id="librarySortSelect" class="select-control auto-width">
                 <option value="date_desc" selected data-i18n="sort_date_desc">📅 الأحدث إضافة</option>
                 <option value="date_asc" data-i18n="sort_date_asc">📅 الأقدم</option>
@@ -342,8 +415,8 @@
             <div class="pro-hero-content">
               <div class="pro-crown-anim">👑</div>
               <div>
-                <h3 class="pro-hero-title">استوديو مزيكتي برو (Mazekty Pro Studio)</h3>
-                <p class="pro-hero-subtitle">أدوات هندسة وتحسين الصوت المتقدمة تعمل 100% محلياً على جهازك وبدون أي اشتراكات.</p>
+                <h3 class="pro-hero-title" data-i18n="pro_hero_title">استوديو مزيكتي برو (Mazekty Pro Studio)</h3>
+                <p class="pro-hero-subtitle" data-i18n="pro_hero_subtitle">أدوات هندسة وتحسين الصوت المتقدمة تعمل 100% محلياً على جهازك وبدون أي اشتراكات.</p>
               </div>
             </div>
           </div>
@@ -479,7 +552,7 @@
               <div class="studio-form">
                 <label class="form-label" data-i18n="select_file_label">اختر الملف:</label>
                 <select id="spatialFileSelect" class="select-control file-select-box"></select>
-                <p class="hint-text mt-2">💡 يُفضل الاستماع إلى ملفات الـ 8D باستخدام سماعات الرأس (Headphones) للحصول على أفضل تجربة ثلاثية الأبعاد.</p>
+                <p class="hint-text mt-2" data-i18n="spatial_hint">💡 يُفضل الاستماع إلى ملفات الـ 8D باستخدام سماعات الرأس (Headphones) للحصول على أفضل تجربة ثلاثية الأبعاد.</p>
                 <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoSpatial8D">
                   <span>🎧</span>
                   <span data-i18n="btn_spatial_execute">تحويل إلى صوت 8D محيطي</span>
@@ -501,11 +574,11 @@
                 <select id="eqFileSelect" class="select-control file-select-box"></select>
                 <label class="form-label mt-2" data-i18n="eq_preset_label">اختر الإعداد المسبق (Preset):</label>
                 <select id="eqPresetSelect" class="select-control">
-                  <option value="bass_boost">🔊 Bass Boost (تضخيم هائل للباس)</option>
-                  <option value="vocal_clarity">🎤 Vocal Clarity (صفاء ونقاوة صوت الغناء)</option>
-                  <option value="rock">🎸 Rock & Acoustic (طاقة وقوة الآلات الحية)</option>
-                  <option value="electronic">⚡ Electronic / Dance (إيقاعات سريعة وواضحة)</option>
-                  <option value="podcast">🎙️ Podcast & Voice (عزل الضوضاء وإبراز الكلام)</option>
+                  <option value="bass_boost" data-i18n="opt_eq_bass">🔊 Bass Boost (تضخيم هائل للباس)</option>
+                  <option value="vocal_clarity" data-i18n="opt_eq_vocal">🎤 Vocal Clarity (صفاء ونقاوة صوت الغناء)</option>
+                  <option value="rock" data-i18n="opt_eq_rock">🎸 Rock & Acoustic (طاقة وقوة الآلات الحية)</option>
+                  <option value="electronic" data-i18n="opt_eq_electro">⚡ Electronic / Dance (إيقاعات سريعة وواضحة)</option>
+                  <option value="podcast" data-i18n="opt_eq_podcast">🎙️ Podcast & Voice (عزل الضوضاء وإبراز الكلام)</option>
                 </select>
                 <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoEqualizer">
                   <span>🎛️</span>
@@ -589,7 +662,7 @@
               </div>
               <div class="studio-form">
                 <label class="form-label" data-i18n="playlist_name_label">اسم قائمة التشغيل (Playlist Name):</label>
-                <input type="text" id="syncPlaylistName" class="text-control" value="مزيكتي - المفضلة" dir="auto" />
+                <input type="text" id="syncPlaylistName" class="text-control" value="Mazekty Favorites" dir="auto" />
 
                 <label class="form-label mt-2" data-i18n="select_file_label">اختر التراك (أو مزامنة كل المكتبة):</label>
                 <select id="syncFileSelect" class="select-control file-select-box"></select>
@@ -622,6 +695,102 @@
                     <span data-i18n="btn_goto_sync_tab">فتح لوحة النقل والمزامنة المستقلة 📱</span>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            <!-- Tool 11: AI Stems Audio Separator [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🧩</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="stems_title">مفكك التراكات الصوتية (AI Stems Separator)</h4>
+                  <p class="studio-tool-desc" data-i18n="stems_desc">فصل أي أغنية إلى 4 مسارات مستقلة: الغناء (Vocals)، الموسيقى (Music)، البيس (Bass)، والإيقاع (Drums).</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف لتفكيك مساراته:</label>
+                <select id="stemsFileSelect" class="select-control file-select-box"></select>
+                <div class="stems-badges-preview mt-2">
+                  <span class="pill pill-active">🎤 Vocals</span>
+                  <span class="pill pill-done">🎹 Music</span>
+                  <span class="pill pill-total">🎸 Bass</span>
+                  <span class="pill pill-skipped">🥁 Drums</span>
+                </div>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoStems">
+                  <span>🧩</span>
+                  <span data-i18n="btn_stems_execute">بدء فصل المسارات الـ 4 فوراً</span>
+                </button>
+                <div id="stemsFeedback" class="mt-2 hidden"></div>
+              </div>
+            </div>
+
+            <!-- Tool 12: Audio Merger & DJ Crossfade [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🎛️</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="merger_title">دمج التراكات وميكس الانتقال (DJ Crossfade)</h4>
+                  <p class="studio-tool-desc" data-i18n="merger_desc">دمج أغنيتين أو أكثر مع انتقال انسيابي متداخل وتلاشي صوتي لتوليد ميكس مستمر.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_track1_label">المقطع الأول:</label>
+                <select id="mergeFileSelect1" class="select-control file-select-box mb-2"></select>
+                <label class="form-label" data-i18n="select_track2_label">المقطع الثاني:</label>
+                <select id="mergeFileSelect2" class="select-control file-select-box mb-2"></select>
+
+                <div class="slider-control-group mt-1">
+                  <div class="slider-header">
+                    <span data-i18n="crossfade_duration">مدة التداخل (Crossfade):</span>
+                    <strong id="crossfadeValueLabel">4.0s</strong>
+                  </div>
+                  <input type="range" id="crossfadeSlider" min="1.0" max="10.0" value="4.0" step="0.5" class="slider-input" />
+                </div>
+
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoMerge">
+                  <span>🎧</span>
+                  <span data-i18n="btn_merge_execute">دمج وتوليد ميكس الـ DJ</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 13: Audio De-Noise & Voice Isolator [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">✨</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="denoise_title">منقي التشويش والضوضاء (Audio De-Noise)</h4>
+                  <p class="studio-tool-desc" data-i18n="denoise_desc">إزالة وشيش الميكروفون وصفير الهواء والضوضاء الخلفية وتوضيح مخارج الحروف.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف الصوتي للتنقية:</label>
+                <select id="denoiseFileSelect" class="select-control file-select-box"></select>
+                <p class="hint-text mt-2" data-i18n="denoise_hint">💡 مثالي لتنقية التسجيلات الصوتية، المحاضرات، البودكاست، والملفات ذات الوشيش الخلفي.</p>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoDenoise">
+                  <span>✨</span>
+                  <span data-i18n="btn_denoise_execute">تنقية وإزالة الضوضاء</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 14: Shazam-like Audio Identifier [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🔎</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="identify_title">كاشف هوية التراكات المجهولة (Audio Identifier)</h4>
+                  <p class="studio-tool-desc" data-i18n="identify_desc">فحص أي أغنية مجهولة لجلب اسمها الأصلي، اسم الفنان، الألبوم، والغلاف فائق الدقة.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف للفحص والتعرف عليه:</label>
+                <select id="identifyFileSelect" class="select-control file-select-box"></select>
+                <div id="identifyResultBox" class="identify-result-box hidden mt-2"></div>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoIdentify">
+                  <span>🔍</span>
+                  <span data-i18n="btn_identify_execute">فحص التراك والتعرف عليه</span>
+                </button>
               </div>
             </div>
 
@@ -779,11 +948,11 @@
                 </div>
 
                 <div class="sync-form-group">
-                  <label for="tabSyncPlaylistName" class="input-label" data-i18n="sync_playlist_label">
+                  <label for="tabSyncPlaylistName" class="input-label">
                     <span>🏷️</span>
-                    <span>اسم قائمة التشغيل (Playlist Name):</span>
+                    <span data-i18n="sync_playlist_label">اسم قائمة التشغيل (Playlist Name):</span>
                   </label>
-                  <input type="text" id="tabSyncPlaylistName" class="input-control glowing-focus" value="Mazekty" placeholder="مثال: Mazekty Top Hits">
+                  <input type="text" id="tabSyncPlaylistName" class="input-control glowing-focus" value="Mazekty" placeholder="مثال: Mazekty Top Hits" data-i18n-placeholder="tab_sync_playlist_placeholder">
                   
                   <!-- Quick suggestion tags -->
                   <div class="quick-tags-row">
@@ -806,9 +975,9 @@
 
                 <!-- Single Track Sync -->
                 <div class="sync-single-track-box">
-                  <label for="tabSyncSingleFileSelect" class="input-label" data-i18n="sync_single_track_label">
+                  <label for="tabSyncSingleFileSelect" class="input-label">
                     <span>🎵</span>
-                    <span>أو اختر تراكاً محدداً لمزامنته فقط:</span>
+                    <span data-i18n="sync_single_track_label">أو اختر تراكاً محدداً لمزامنته فقط:</span>
                   </label>
                   <div class="sync-single-controls">
                     <select id="tabSyncSingleFileSelect" class="select-control flex-1">
@@ -899,9 +1068,9 @@
                 </div>
                 <div class="setting-control-wrap">
                   <select id="settingsThemeModeSelect" class="select-control">
-                    <option value="dark" selected>🌌 Dark Glass (الزجاجي الداكن الافتراضي)</option>
-                    <option value="oled">🖤 OLED Black (أسود نقي لشاشات ريتينا)</option>
-                    <option value="light">☀️ Light Modern (الفاتح العصري)</option>
+                    <option value="dark" selected data-i18n="opt_theme_dark">🌌 Dark Glass (الزجاجي الداكن الافتراضي)</option>
+                    <option value="oled" data-i18n="opt_theme_oled">🖤 OLED Black (أسود نقي لشاشات ريتينا)</option>
+                    <option value="light" data-i18n="opt_theme_light">☀️ Light Modern (الفاتح العصري)</option>
                   </select>
                 </div>
               </div>
@@ -931,14 +1100,14 @@
                 </div>
                 <div class="setting-control-wrap">
                   <select id="settingsLangSelect" class="select-control">
-                    <option value="en">English (US / UK)</option>
-                    <option value="ar">العربية (Arabic)</option>
-                    <option value="es">Español (Spanish)</option>
-                    <option value="fr">Français (French)</option>
-                    <option value="de">Deutsch (German)</option>
-                    <option value="tr">Türkçe (Turkish)</option>
-                    <option value="pt">Português (Portuguese)</option>
-                    <option value="ru">Русский (Russian)</option>
+                    <option value="ar">🇪🇬 العربية</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="es">🇪🇸 Español</option>
+                    <option value="fr">🇫🇷 Français</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                    <option value="tr">🇹🇷 Türkçe</option>
+                    <option value="pt">🇵🇹 Português</option>
+                    <option value="ru">🇷🇺 Русский</option>
                   </select>
                 </div>
               </div>
@@ -957,11 +1126,11 @@
               <!-- Setting: Pro Status -->
               <div class="setting-item">
                 <div class="setting-info">
-                  <div class="setting-name">ترخيص مزيكتي برو (Mazekty PRO)</div>
-                  <div class="setting-desc">حالة الميزات الاحترافية مفعلة بشكل دائم ومجاني 100%.</div>
+                  <div class="setting-name" data-i18n="setting_license_title">ترخيص مزيكتي برو (Mazekty PRO)</div>
+                  <div class="setting-desc" data-i18n="setting_license_desc">حالة الميزات الاحترافية مفعلة بشكل دائم ومجاني 100%.</div>
                 </div>
                 <div class="setting-control-wrap">
-                  <span class="pro-status-active">✓ مُفعل ونشط مدى الحياة</span>
+                  <span class="pro-status-active" data-i18n="setting_license_active">✓ مُفعل ونشط مدى الحياة</span>
                 </div>
               </div>
             </div>
@@ -989,6 +1158,10 @@
     </div>
 
     <div class="player-right-actions">
+      <button type="button" class="btn-player-action hover-lift" id="btnPlayerLyrics" title="كلمات الأغنية المتزامنة (Karaoke Lyrics)">🎤</button>
+      <button type="button" class="btn-player-action hover-lift" id="btnPlayerVisualizer" title="محلل الطيف الصوتي (Neon Visualizer)">📊</button>
+      <button type="button" class="btn-player-action hover-lift" id="btnPlayerSleepTimer" title="مؤقت النوم الذكي (Sleep Timer)">🌙</button>
+      <button type="button" class="btn-player-action hover-lift" id="btnPlayerMini" title="المشغل المصغر العائم (Mini Player)">🔲</button>
       <button type="button" class="btn-player-action hover-lift" id="btnPlayerAppleSync" title="إضافة لتطبيق Music">🍎</button>
       <button type="button" class="btn-player-action hover-lift" id="btnPlayerClose" title="إغلاق المشغل">✕</button>
     </div>
@@ -1070,19 +1243,134 @@
           <label class="form-label" data-i18n="mobile_url_label">أو افتح هذا الرابط مباشرة من متصفح سفاري (Safari):</label>
           <div style="display:flex; gap:8px; margin-top:6px;">
             <input type="text" id="mobileUrlInput" class="text-control" readonly dir="ltr" style="text-align:center; font-weight:700;" />
-            <button type="button" class="tool-btn highlight" id="btnCopyMobileUrl">📋 نسخ</button>
+            <button type="button" class="tool-btn highlight" id="btnCopyMobileUrl" data-i18n="btn_copy">📋 نسخ</button>
           </div>
         </div>
 
         <div class="mt-3" style="text-align: right; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6;">
-          <div>✓ <strong>الخطوة 1:</strong> افتح كاميرا الآيفون وامسح الرمز.</div>
-          <div>✓ <strong>الخطوة 2:</strong> ستفتح صفحة البلاي ليست في Safari.</div>
-          <div>✓ <strong>الخطوة 3:</strong> اضغط "تحميل الكل ZIP" لتنتقل الأغاني لتطبيق Files بالآيفون، أو شغّل البلاي ليست في الخلفية!</div>
+          <div data-i18n="modal_step1">✓ <strong>الخطوة 1:</strong> افتح كاميرا الآيفون وامسح الرمز.</div>
+          <div data-i18n="modal_step2">✓ <strong>الخطوة 2:</strong> ستفتح صفحة البلاي ليست في Safari.</div>
+          <div data-i18n="modal_step3">✓ <strong>الخطوة 3:</strong> اضغط "تحميل الكل ZIP" لتنتقل الأغاني لتطبيق Files بالآيفون، أو شغّل البلاي ليست في الخلفية!</div>
         </div>
       </div>
       <div class="modal-footer" style="justify-content: center;">
-        <button type="button" class="btn-action btn-secondary" id="btnDoneMobileModal">تم الإغلاق ✓</button>
+        <button type="button" class="btn-action btn-secondary" id="btnDoneMobileModal" data-i18n="btn_done">تم الإغلاق ✓</button>
       </div>
+    </div>
+  </div>
+
+  <!-- DRAWER: SYNCED KARAOKE LYRICS -->
+  <div class="lyrics-drawer glass-card hidden" id="lyricsDrawer">
+    <div class="lyrics-drawer-header">
+      <div class="lyrics-title-group">
+        <span class="lyrics-icon">🎤</span>
+        <div>
+          <h4 id="lyricsTrackTitle" class="lyrics-track-title">كلمات الأغنية</h4>
+          <span id="lyricsArtistName" class="lyrics-artist-name">-</span>
+        </div>
+      </div>
+      <div class="lyrics-drawer-actions">
+        <button type="button" class="tool-btn highlight hover-glow" id="btnSaveLrc" title="حفظ كملف .lrc">💾 حفظ .lrc</button>
+        <button type="button" class="tool-btn hover-glow" id="btnCloseLyrics">✕</button>
+      </div>
+    </div>
+    <div class="lyrics-body" id="lyricsContainer">
+      <div class="lyrics-loading">جاري جلب الكلمات المتزامنة...</div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: LIVE NEON SPECTRUM VISUALIZER -->
+  <div class="visualizer-overlay hidden" id="visualizerOverlay">
+    <div class="visualizer-modal glass-card">
+      <div class="visualizer-header">
+        <div class="visualizer-title-group">
+          <span class="vis-icon">📊</span>
+          <h4 data-i18n="vis_modal_title">محلل الطيف الصوتي النيوني (Live Spectrum)</h4>
+        </div>
+        <div class="visualizer-actions">
+          <select id="visModeSelect" class="select-control mini-select">
+            <option value="bars">أعمدة نيونية (Neon Bars)</option>
+            <option value="wave">موجات صوتية (Waveform)</option>
+            <option value="circle">طيف دائري (Circular)</option>
+          </select>
+          <button type="button" class="tool-btn hover-glow" id="btnCloseVisualizer">✕</button>
+        </div>
+      </div>
+      <div class="visualizer-canvas-wrap">
+        <canvas id="spectrumCanvas" width="800" height="320"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SLEEP TIMER -->
+  <div class="modal-overlay hidden" id="sleepTimerModal">
+    <div class="modal-dialog glass-card" style="max-width: 400px; text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title">🌙 <span data-i18n="sleep_timer_title">مؤقت النوم الذكي</span></h3>
+        <button type="button" class="tool-btn" id="btnCloseSleepTimer">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="hint-text mb-3" data-i18n="sleep_timer_desc">سيتم خفض الصوت تدريجياً وإيقاف المشغل تلقائياً بعد انقضاء الوقت:</p>
+        <div class="sleep-timer-grid">
+          <button type="button" class="sleep-option-btn hover-lift" data-minutes="15">⏱️ 15 دقيقة</button>
+          <button type="button" class="sleep-option-btn hover-lift" data-minutes="30">⏱️ 30 دقيقة</button>
+          <button type="button" class="sleep-option-btn hover-lift" data-minutes="45">⏱️ 45 دقيقة</button>
+          <button type="button" class="sleep-option-btn hover-lift" data-minutes="60">⏱️ 60 دقيقة</button>
+          <button type="button" class="sleep-option-btn danger hover-lift" data-minutes="0">❌ إيقاف المؤقت</button>
+        </div>
+        <div id="sleepTimerStatus" class="sleep-status-text mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RETRY FAILED WITH NEW FORMAT & QUALITY -->
+  <div class="modal-overlay hidden" id="retryModalOverlay">
+    <div class="modal-dialog glass-card" style="max-width: 460px;">
+      <div class="modal-header">
+        <h3 class="modal-title">⚙️ <span data-i18n="retry_modal_title">تعديل الصيغة والجودة وإعادة المحاولة</span></h3>
+        <button type="button" class="tool-btn" id="btnCloseRetryModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="retryItemId" />
+        <p class="hint-text mb-2" id="retryTrackTitleText">اختر صيغة أو جودة بديلة للتحميل:</p>
+
+        <div class="form-group mb-2">
+          <label class="form-label" data-i18n="format_label">الصيغة البديلة:</label>
+          <select id="retryFormatSelect" class="select-control">
+            <option value="mp3">🎵 MP3 (الصوت القياسي الأكثر توافقاً)</option>
+            <option value="m4a">🍎 M4A (Apple AAC)</option>
+            <option value="wav">🎙️ WAV (Studio Master)</option>
+            <option value="mp4">🎬 MP4 (فيديو كامل)</option>
+          </select>
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label" data-i18n="quality_label">الجودة (Bitrate):</label>
+          <select id="retryQualitySelect" class="select-control">
+            <option value="192">🎵 192 kbps (متوسطة ومضمونة)</option>
+            <option value="256">✨ 256 kbps (عالية)</option>
+            <option value="128">📦 128 kbps (حجم خفيف وتوافق سريع)</option>
+            <option value="320">⚡ 320 kbps (أعلى جودة)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btnCancelRetryModal" data-i18n="btn_cancel">إلغاء</button>
+        <button type="button" class="btn-action btn-download hover-lift" id="btnConfirmRetrySingle" data-i18n="btn_retry_now">إعادة المحاولة الآن 🔄</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST: SMART CLIPBOARD AUTO-MONITOR -->
+  <div class="clipboard-toast glass-card hidden" id="clipboardToast">
+    <div class="clipboard-toast-icon">📋</div>
+    <div class="clipboard-toast-content">
+      <strong data-i18n="clipboard_detected">تم نسخ رابط وسائط جديد!</strong>
+      <span id="clipboardToastUrl" class="clipboard-toast-url">https://...</span>
+    </div>
+    <div class="clipboard-toast-actions">
+      <button type="button" class="tool-btn highlight" id="btnClipboardAdd">📥 تحميل الآن</button>
+      <button type="button" class="tool-btn" id="btnClipboardDismiss">✕</button>
     </div>
   </div>
 

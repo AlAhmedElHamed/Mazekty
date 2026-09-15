@@ -9,7 +9,7 @@ env/
 __pycache__/
 **/*__pycache__*
 *.py[cod]
-*$py.class
+*.class
 *.so
 
 # User data and media downloads
@@ -39,3 +39,14 @@ ehthumbs.db
 *.tmp
 mazekty_linux_dist/
 mazekty_win_dist/
+bin/
+*.lnk
+dist/
+build_temp/
+*.spec
+*.exe
+build/windows/*.exe
+build/windows/*.zip
+
+*.pyc
+*.pyo

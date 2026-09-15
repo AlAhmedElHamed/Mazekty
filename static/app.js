@@ -15,6 +15,46 @@ let previewDataList = [];
 // --- Comprehensive Bilingual Dictionary for 20+ Features ---
 const i18n = {
   "en": {
+    "auto_retry_end": "Auto-retry failed downloads at the end of queue",
+    "btn_denoise_execute": "Clean & De-Noise Audio",
+    "btn_identify_execute": "Analyze & Identify Track",
+    "btn_merge_execute": "Merge & Generate DJ Mix",
+    "btn_retry_failed": "Retry All Failed",
+    "btn_retry_now": "Retry Now 🔄",
+    "btn_stems_execute": "Extract 4 Stems Now",
+    "clipboard_detected": "New Media Link Copied!",
+    "clipboard_monitor": "Smart Clipboard Auto-Monitor",
+    "crossfade_duration": "Crossfade Duration:",
+    "denoise_desc": "Remove mic hiss, air noise and background hum to clarify vocals.",
+    "denoise_hint": "💡 Ideal for voice recordings, lectures, podcasts, and noisy files.",
+    "denoise_title": "Audio De-Noise & Voice Clarifier",
+    "identify_desc": "Scan unknown audio files to fetch original title, artist, album and HD artwork.",
+    "identify_title": "Track Identifier (Shazam-like)",
+    "merger_desc": "Merge two tracks with seamless DJ crossfade transition.",
+    "merger_title": "Audio Merger & DJ Crossfade",
+    "retry_modal_title": "Change Format / Quality & Retry",
+    "select_track1_label": "First Track:",
+    "select_track2_label": "Second Track:",
+    "sleep_timer_desc": "Audio volume will fade out gradually and playback will stop automatically:",
+    "sleep_timer_title": "Smart Sleep Timer",
+    "stems_desc": "Split any song into 4 independent stems: Vocals, Music, Bass, and Drums.",
+    "stems_title": "AI Stems Separator (4 Stems)",
+    "supported_platforms": "Supported Platforms:",
+    "vis_modal_title": "Live Neon Spectrum Visualizer",
+    "lyrics_title": "Karaoke Lyrics",
+    "lyrics_loading": "Fetching synced karaoke lyrics...",
+    "lyrics_not_found": "No synced lyrics found for this track.",
+    "lyrics_synced": "Karaoke Synced ✓",
+    "lyrics_plain": "Plain Text Lyrics",
+    "btn_save_lrc": "Save .lrc File",
+    "lrc_saved": "LRC lyrics saved successfully!",
+    "btn_mini_player": "Mini Floating Player",
+    "btn_visualizer": "Neon Spectrum Visualizer",
+    "btn_sleep_timer": "Sleep Timer",
+    "sleep_timer_active": "Sleep timer active: {min}m remaining",
+    "sleep_timer_off": "Sleep timer turned off",
+    "toast_download_now": "Download Now",
+    "toast_ignore": "Dismiss",
     "app_brand": "Mazekty",
     "nav_downloader": "Downloader",
     "nav_search": "Direct Search",
@@ -181,9 +221,90 @@ const i18n = {
     "btn_copy": "Copy",
     "btn_open": "Open",
     "btn_ping": "Ping",
-    "qr_loading": "Generating high-speed QR Code..."
+    "qr_loading": "Generating high-speed QR Code...",
+    "lang_select_label": "App Language",
+    "url_placeholder": "Paste links here... Video, Playlist, or multiple URLs (one per line)...",
+    "search_input_placeholder": "Search by song or artist name... (e.g. Adele, Coldplay, Lo-Fi chill)...",
+    "library_filter_placeholder": "Filter and search tracks by name...",
+    "tab_sync_playlist_placeholder": "e.g. Mazekty Top Hits",
+    "range_to": "to",
+    "pro_hero_title": "Mazekty Pro Studio",
+    "pro_hero_subtitle": "Advanced audio engineering tools running 100% locally on your machine with zero subscriptions.",
+    "spatial_hint": "💡 Headphones are highly recommended for the best 360° spatial binaural experience.",
+    "opt_format_mp3": "🎵 MP3 (Universal Standard)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC High Quality)",
+    "opt_format_flac": "💎 FLAC (Lossless Studio Quality)",
+    "opt_format_wav": "🎙️ WAV (Raw Studio Master)",
+    "opt_format_mp4": "🎬 MP4 (HD Video & Audio)",
+    "opt_quality_320": "⚡ 320 kbps (Ultra HD - Highest Quality)",
+    "opt_quality_256": "✨ 256 kbps (High Quality)",
+    "opt_quality_192": "🎵 192 kbps (Medium Quality)",
+    "opt_quality_128": "📦 128 kbps (Standard - Smaller Size)",
+    "opt_speed_unlimited": "🚀 Unlimited (Max Speed)",
+    "opt_speed_3mb": "⚡ 3 MB/s (Balanced Fast)",
+    "opt_speed_1mb": "🌐 1 MB/s (Quota Saver)",
+    "opt_speed_500kb": "🐌 500 KB/s (Low Bandwidth)",
+    "opt_eq_bass": "🔊 Bass Boost (Deep Low-End)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Clean Vocals)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Live Energy)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Punchy Beats)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Voice Isolation)",
+    "opt_theme_dark": "🌌 Dark Glass (Default)",
+    "opt_theme_oled": "🖤 OLED Black (Pure Pitch Black)",
+    "opt_theme_light": "☀️ Light Modern",
+    "setting_license_title": "Mazekty PRO License",
+    "setting_license_desc": "Professional features are permanently active and 100% free.",
+    "setting_license_active": "✓ Active & Lifetime Activated",
+    "modal_step1": "✓ Step 1: Open iPhone Camera and scan QR code.",
+    "modal_step2": "✓ Step 2: Safari opens your instant web player.",
+    "modal_step3": "✓ Step 3: Tap 'Download All ZIP' to save to iOS Files app, or stream in background!",
+    "btn_done": "Done ✓",
+    "splash_loading": "Initializing Mazekty Pro audio engine...",
+    "splash_ready": "Welcome to Mazekty Pro",
+    "loading_view": "Loading...",
+    "sound_toggle_title": "Mute / Unmute Sound Effects",
   },
   "ar": {
+    "auto_retry_end": "إعادة محاولة التحميلات الفاشلة تلقائياً في نهاية الطابور",
+    "btn_denoise_execute": "تنقية وإزالة الضوضاء",
+    "btn_identify_execute": "فحص التراك والتعرف عليه",
+    "btn_merge_execute": "دمج وتوليد ميكس الـ DJ",
+    "btn_retry_failed": "إعادة محاولة الفاشل",
+    "btn_retry_now": "إعادة المحاولة الآن 🔄",
+    "btn_stems_execute": "بدء فصل المسارات الـ 4 فوراً",
+    "clipboard_detected": "تم نسخ رابط وسائط جديد!",
+    "clipboard_monitor": "المراقبة الذكية للحافظة التلقائية",
+    "crossfade_duration": "مدة التداخل (Crossfade):",
+    "denoise_desc": "إزالة وشيش الميكروفون وصفير الهواء والضوضاء الخلفية وتوضيح مخارج الحروف.",
+    "denoise_hint": "💡 مثالي لتنقية التسجيلات الصوتية، المحاضرات، البودكاست، والملفات ذات الوشيش الخلفي.",
+    "denoise_title": "منقي التشويش والضوضاء (Audio De-Noise)",
+    "identify_desc": "فحص أي أغنية مجهولة لجلب اسمها الأصلي، اسم الفنان، الألبوم، والغلاف فائق الدقة.",
+    "identify_title": "كاشف هوية التراكات المجهولة (Audio Identifier)",
+    "merger_desc": "دمج أغنيتين أو أكثر مع انتقال انسيابي متداخل وتلاشي صوتي لتوليد ميكس مستمر.",
+    "merger_title": "دمج التراكات وميكس الانتقال (DJ Crossfade)",
+    "retry_modal_title": "تعديل الصيغة والجودة وإعادة المحاولة",
+    "select_track1_label": "المقطع الأول:",
+    "select_track2_label": "المقطع الثاني:",
+    "sleep_timer_desc": "سيتم خفض الصوت تدريجياً وإيقاف المشغل تلقائياً بعد انقضاء الوقت:",
+    "sleep_timer_title": "مؤقت النوم الذكي",
+    "stems_desc": "فصل أي أغنية إلى 4 مسارات مستقلة: الغناء (Vocals)، الموسيقى (Music)، البيس (Bass)، والإيقاع (Drums).",
+    "stems_title": "مفكك التراكات الصوتية (AI Stems Separator)",
+    "supported_platforms": "المنصات المدعومة:",
+    "vis_modal_title": "محلل الطيف الصوتي النيوني (Live Spectrum)",
+    "lyrics_title": "كلمات الأغنية المتزامنة",
+    "lyrics_loading": "جاري جلب الكلمات المتزامنة...",
+    "lyrics_not_found": "لم يتم العثور على كلمات متزامنة لهذا التراك.",
+    "lyrics_synced": "متزامن كاريوكي ✓",
+    "lyrics_plain": "كلمات نصية",
+    "btn_save_lrc": "حفظ كملف .lrc",
+    "lrc_saved": "تم حفظ ملف الكلمات LRC بنجاح!",
+    "btn_mini_player": "المشغل المصغر العائم",
+    "btn_visualizer": "محلل الطيف الصوتي",
+    "btn_sleep_timer": "مؤقت النوم",
+    "sleep_timer_active": "مؤقت النوم نشط: متبقي {min} دقيقة",
+    "sleep_timer_off": "تم إيقاف مؤقت النوم",
+    "toast_download_now": "تحميل الآن",
+    "toast_ignore": "تجاهل",
     "app_brand": "مزيكتي",
     "nav_downloader": "التحميل السريع",
     "nav_search": "البحث المباشر",
@@ -350,9 +471,90 @@ const i18n = {
     "btn_copy": "نسخ",
     "btn_open": "فتح",
     "btn_ping": "فحص",
-    "qr_loading": "جاري إنشاء كود QR فائق السرعة..."
+    "qr_loading": "جاري إنشاء كود QR فائق السرعة...",
+    "lang_select_label": "اللغة / Language",
+    "url_placeholder": "ضع الرابط هنا... فيديو، قائمة تشغيل (Playlist)، أو عدة روابط (كل رابط في سطر)...",
+    "search_input_placeholder": "ابحث باسم الأغنية أو الفنان... (مثال: عمرو دياب، Adele، تراك هادئ)...",
+    "library_filter_placeholder": "تصفية والبحث في الملفات بالاسم...",
+    "tab_sync_playlist_placeholder": "مثال: Mazekty Top Hits",
+    "range_to": "إلى",
+    "pro_hero_title": "استوديو مزيكتي برو (Mazekty Pro Studio)",
+    "pro_hero_subtitle": "أدوات هندسة وتحسين الصوت المتقدمة تعمل 100% محلياً على جهازك وبدون أي اشتراكات.",
+    "spatial_hint": "💡 يُفضل الاستماع إلى ملفات الـ 8D باستخدام سماعات الرأس (Headphones) للحصول على أفضل تجربة ثلاثية الأبعاد.",
+    "opt_format_mp3": "🎵 MP3 (الصوت القياسي العالمي)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC عالي النقاوة)",
+    "opt_format_flac": "💎 FLAC (صوت نقي بدون فقد Lossless)",
+    "opt_format_wav": "🎙️ WAV (جودة ستوديو خام Studio Master)",
+    "opt_format_mp4": "🎬 MP4 (فيديو وصوت كامل HD Video)",
+    "opt_quality_320": "⚡ 320 kbps (أعلى جودة صوت - Ultra HD)",
+    "opt_quality_256": "✨ 256 kbps (جودة ممتازة - High)",
+    "opt_quality_192": "🎵 192 kbps (جودة جيدة - Medium)",
+    "opt_quality_128": "📦 128 kbps (حجم أصغر - Standard)",
+    "opt_speed_unlimited": "🚀 بلا حدود (أقصى سرعة)",
+    "opt_speed_3mb": "⚡ 3 MB/s (سريع وموزون)",
+    "opt_speed_1mb": "🌐 1 MB/s (متوسط للباقة)",
+    "opt_speed_500kb": "🐌 500 KB/s (توفير الإنترنت)",
+    "opt_eq_bass": "🔊 Bass Boost (تضخيم هائل للباس)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (صفاء ونقاوة صوت الغناء)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (طاقة وقوة الآلات الحية)",
+    "opt_eq_electro": "⚡ Electronic / Dance (إيقاعات سريعة وواضحة)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (عزل الضوضاء وإبراز الكلام)",
+    "opt_theme_dark": "🌌 Dark Glass (الزجاجي الداكن الافتراضي)",
+    "opt_theme_oled": "🖤 OLED Black (أسود نقي لشاشات ريتينا)",
+    "opt_theme_light": "☀️ Light Modern (الفاتح العصري)",
+    "setting_license_title": "ترخيص مزيكتي برو (Mazekty PRO)",
+    "setting_license_desc": "حالة الميزات الاحترافية مفعلة بشكل دائم ومجاني 100%.",
+    "setting_license_active": "✓ مُفعل ونشط مدى الحياة",
+    "modal_step1": "✓ الخطوة 1: افتح كاميرا الآيفون وامسح الرمز.",
+    "modal_step2": "✓ الخطوة 2: ستفتح صفحة البلاي ليست في Safari.",
+    "modal_step3": "✓ الخطوة 3: اضغط 'تحميل الكل ZIP' لتنتقل الأغاني لتطبيق Files بالآيفون، أو شغّل البلاي ليست في الخلفية!",
+    "btn_done": "تم الإغلاق ✓",
+    "splash_loading": "جاري تهيئة النظام والمحرك الصوتي...",
+    "splash_ready": "مرحباً بك في مزيكتي برو",
+    "loading_view": "جاري التحميل...",
+    "sound_toggle_title": "كتم / تشغيل المؤثرات",
   },
   "es": {
+    "auto_retry_end": "Reintentar descargas fallidas al final de la cola",
+    "btn_denoise_execute": "Limpiar y Reducir Ruido",
+    "btn_identify_execute": "Identificar Canción",
+    "btn_merge_execute": "Mezclar y Crear Mix DJ",
+    "btn_retry_failed": "Reintentar Fallidos",
+    "btn_retry_now": "Reintentar Ahora 🔄",
+    "btn_stems_execute": "Extraer 4 Pistas Ahora",
+    "clipboard_detected": "¡Enlace de música copiado!",
+    "clipboard_monitor": "Monitor Inteligente de Portapapeles",
+    "crossfade_duration": "Duración de Transición:",
+    "denoise_desc": "Elimina siseos y ruidos de fondo para voces claras.",
+    "denoise_hint": "💡 Ideal para grabaciones de voz, podcasts y archivos con ruido.",
+    "denoise_title": "Filtro Reductor de Ruido",
+    "identify_desc": "Escanea audios desconocidos para obtener título, artista, álbum y carátula.",
+    "identify_title": "Identificador de Canciones (Tipo Shazam)",
+    "merger_desc": "Une dos canciones con suave transición crossfade.",
+    "merger_title": "Mezclador de Audio y Crossfade",
+    "retry_modal_title": "Cambiar Formato / Calidad y Reintentar",
+    "select_track1_label": "Primera Pista:",
+    "select_track2_label": "Segunda Pista:",
+    "sleep_timer_desc": "El volumen disminuirá gradualmente hasta pausar:",
+    "sleep_timer_title": "Temporizador de Apagado",
+    "stems_desc": "Divide cualquier canción en 4 pistas: Voz, Música, Bajo y Batería.",
+    "stems_title": "Separador de Pistas AI (4 Stems)",
+    "supported_platforms": "Plataformas Compatibles:",
+    "vis_modal_title": "Visualizador de Espectro Neón",
+    "lyrics_title": "Letras Sincronizadas",
+    "lyrics_loading": "Buscando letras sincronizadas...",
+    "lyrics_not_found": "No se encontraron letras sincronizadas.",
+    "lyrics_synced": "Karaoke Sincronizado ✓",
+    "lyrics_plain": "Letra en Texto",
+    "btn_save_lrc": "Guardar archivo .lrc",
+    "lrc_saved": "¡Archivo LRC guardado con éxito!",
+    "btn_mini_player": "Mini Reproductor Flotante",
+    "btn_visualizer": "Visualizador de Espectro",
+    "btn_sleep_timer": "Temporizador de Sueño",
+    "sleep_timer_active": "Temporizador activo: {min}m restantes",
+    "sleep_timer_off": "Temporizador desactivado",
+    "toast_download_now": "Descargar Ahora",
+    "toast_ignore": "Descartar",
     "app_brand": "Mazekty",
     "nav_downloader": "Descargador",
     "nav_search": "Búsqueda Directa",
@@ -518,9 +720,90 @@ const i18n = {
     "btn_copy": "Copiar",
     "btn_open": "Abrir",
     "btn_ping": "Probar",
-    "qr_loading": "Generando código QR..."
+    "qr_loading": "Generando código QR...",
+    "lang_select_label": "Idioma / Language",
+    "url_placeholder": "Pega los enlaces aquí... Video, lista de reproducción o varias URLs (una por línea)...",
+    "search_input_placeholder": "Buscar por canción o artista... (ej. Adele, Coldplay)...",
+    "library_filter_placeholder": "Filtrar pistas por nombre...",
+    "tab_sync_playlist_placeholder": "ej. Mazekty Top Hits",
+    "range_to": "a",
+    "pro_hero_title": "Estudio Mazekty Pro",
+    "pro_hero_subtitle": "Herramientas de ingeniería de audio avanzadas que se ejecutan 100% en local sin suscripciones.",
+    "spatial_hint": "💡 Se recomiendan auriculares para una experiencia espacial 360° inmersiva.",
+    "opt_format_mp3": "🎵 MP3 (Estándar universal)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC alta calidad)",
+    "opt_format_flac": "💎 FLAC (Calidad de estudio Lossless)",
+    "opt_format_wav": "🎙️ WAV (Master de estudio sin comprimir)",
+    "opt_format_mp4": "🎬 MP4 (Video y audio HD)",
+    "opt_quality_320": "⚡ 320 kbps (Calidad máxima - Ultra HD)",
+    "opt_quality_256": "✨ 256 kbps (Calidad alta)",
+    "opt_quality_192": "🎵 192 kbps (Calidad media)",
+    "opt_quality_128": "📦 128 kbps (Estándar - Menor tamaño)",
+    "opt_speed_unlimited": "🚀 Ilimitado (Máxima velocidad)",
+    "opt_speed_3mb": "⚡ 3 MB/s (Rápido y equilibrado)",
+    "opt_speed_1mb": "🌐 1 MB/s (Ahorro de datos)",
+    "opt_speed_500kb": "🐌 500 KB/s (Bajo consumo)",
+    "opt_eq_bass": "🔊 Bass Boost (Refuerzo de graves)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Claridad de voz)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Energía en vivo)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Ritmos potentes)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Aislamiento de voz)",
+    "opt_theme_dark": "🌌 Dark Glass (Predeterminado)",
+    "opt_theme_oled": "🖤 OLED Black (Negro puro)",
+    "opt_theme_light": "☀️ Light Modern (Claro moderno)",
+    "setting_license_title": "Licencia Mazekty PRO",
+    "setting_license_desc": "Funciones PRO activas permanentemente y 100% gratis.",
+    "setting_license_active": "✓ Activo de por vida",
+    "modal_step1": "✓ Paso 1: Abre la cámara del iPhone y escanea el código QR.",
+    "modal_step2": "✓ Paso 2: Safari abrirá el reproductor web al instante.",
+    "modal_step3": "✓ Paso 3: Toca 'Descargar todo en ZIP' para guardar en Archivos, o reproduce en segundo plano.",
+    "btn_done": "Hecho ✓",
+    "splash_loading": "Iniciando motor de audio Mazekty Pro...",
+    "splash_ready": "Bienvenido a Mazekty Pro",
+    "loading_view": "Cargando...",
+    "sound_toggle_title": "Silenciar / Activar sonido",
   },
   "fr": {
+    "auto_retry_end": "Réessayer les échecs à la fin de la file d'attente",
+    "btn_denoise_execute": "Nettoyer et Débruiter",
+    "btn_identify_execute": "Identifier le Morceau",
+    "btn_merge_execute": "Fusionner et Mixer (DJ)",
+    "btn_retry_failed": "Réessayer Tous les Échecs",
+    "btn_retry_now": "Réessayer Maintenant 🔄",
+    "btn_stems_execute": "Extraire les 4 Pistes",
+    "clipboard_detected": "Lien musical copié détecté !",
+    "clipboard_monitor": "Surveillance Intelligente du Presse-papiers",
+    "crossfade_duration": "Durée du Fondu Enchaîné :",
+    "denoise_desc": "Supprime les souffles et bruits de fond pour des voix nettes.",
+    "denoise_hint": "💡 Idéal pour voix, cours, podcasts et fichiers bruités.",
+    "denoise_title": "Suppresseur de Bruit Audio",
+    "identify_desc": "Identifie un titre pour obtenir artiste, album et pochette HD.",
+    "identify_title": "Identificateur de Titres (Style Shazam)",
+    "merger_desc": "Fusionne deux pistes audio avec fondu enchaîné harmonieux.",
+    "merger_title": "Fusion Audio et Fondu Enchaîné",
+    "retry_modal_title": "Modifier Format / Qualité et Réessayer",
+    "select_track1_label": "Première Piste :",
+    "select_track2_label": "Deuxième Piste :",
+    "sleep_timer_desc": "Le volume diminuera graduellement avant l'arrêt complet :",
+    "sleep_timer_title": "Minuteur de Sommeil",
+    "stems_desc": "Sépare en 4 pistes indépendantes : Voix, Musique, Basse, Batterie.",
+    "stems_title": "Séparateur de Pistes IA (4 Stems)",
+    "supported_platforms": "Plateformes Compatibles :",
+    "vis_modal_title": "Visualiseur de Spectre Néon",
+    "lyrics_title": "Paroles Synchronisées",
+    "lyrics_loading": "Recherche des paroles karaoké...",
+    "lyrics_not_found": "Aucune parole synchronisée trouvée.",
+    "lyrics_synced": "Karaoké Synchronisé ✓",
+    "lyrics_plain": "Paroles Brutes",
+    "btn_save_lrc": "Enregistrer Fichier .lrc",
+    "lrc_saved": "Fichier LRC enregistré avec succès !",
+    "btn_mini_player": "Mini Lecteur Flottant",
+    "btn_visualizer": "Visualiseur de Spectre",
+    "btn_sleep_timer": "Minuteur de Veille",
+    "sleep_timer_active": "Minuteur actif : {min}m restantes",
+    "sleep_timer_off": "Minuteur de veille désactivé",
+    "toast_download_now": "Télécharger Maintenant",
+    "toast_ignore": "Ignorer",
     "app_brand": "Mazekty",
     "nav_downloader": "Téléchargeur",
     "nav_search": "Recherche Directe",
@@ -686,9 +969,90 @@ const i18n = {
     "btn_copy": "Copier",
     "btn_open": "Ouvrir",
     "btn_ping": "Tester",
-    "qr_loading": "Génération du QR Code..."
+    "qr_loading": "Génération du QR Code...",
+    "lang_select_label": "Langue / Language",
+    "url_placeholder": "Collez les liens ici... Vidéo, playlist ou plusieurs URLs (une par ligne)...",
+    "search_input_placeholder": "Rechercher par titre ou artiste... (ex: Adele, Coldplay)...",
+    "library_filter_placeholder": "Filtrer les pistes par nom...",
+    "tab_sync_playlist_placeholder": "ex: Mazekty Top Hits",
+    "range_to": "à",
+    "pro_hero_title": "Studio Mazekty Pro",
+    "pro_hero_subtitle": "Outils audio avancés fonctionnant 100% localement sans abonnement.",
+    "spatial_hint": "💡 Casque recommandé pour une expérience spatiale 360° optimale.",
+    "opt_format_mp3": "🎵 MP3 (Standard universel)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC haute fidélité)",
+    "opt_format_flac": "💎 FLAC (Qualité studio sans perte)",
+    "opt_format_wav": "🎙️ WAV (Master studio brut)",
+    "opt_format_mp4": "🎬 MP4 (Vidéo & Audio HD)",
+    "opt_quality_320": "⚡ 320 kbps (Ultra HD - Qualité maximale)",
+    "opt_quality_256": "✨ 256 kbps (Haute qualité)",
+    "opt_quality_192": "🎵 192 kbps (Qualité moyenne)",
+    "opt_quality_128": "📦 128 kbps (Standard - Fichier réduit)",
+    "opt_speed_unlimited": "🚀 Illimité (Vitesse maximale)",
+    "opt_speed_3mb": "⚡ 3 Mo/s (Rapide et équilibré)",
+    "opt_speed_1mb": "🌐 1 Mo/s (Économie de données)",
+    "opt_speed_500kb": "🐌 500 Ko/s (Basse consommation)",
+    "opt_eq_bass": "🔊 Bass Boost (Basses profondes)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Voix cristallines)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Énergie scénique)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Rythmes percutants)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Isolation vocale)",
+    "opt_theme_dark": "🌌 Dark Glass (Par défaut)",
+    "opt_theme_oled": "🖤 OLED Black (Noir profond)",
+    "opt_theme_light": "☀️ Light Modern (Clair moderne)",
+    "setting_license_title": "Licence Mazekty PRO",
+    "setting_license_desc": "Fonctionnalités PRO actives en permanence et 100% gratuites.",
+    "setting_license_active": "✓ Actif et débloqué à vie",
+    "modal_step1": "✓ Étape 1: Ouvrez l'appareil photo iPhone et scannez le QR code.",
+    "modal_step2": "✓ Étape 2: Safari ouvre immédiatement votre lecteur web.",
+    "modal_step3": "✓ Étape 3: Touchez 'Télécharger tout en ZIP' pour l'app Fichiers ou écoutez en arrière-plan!",
+    "btn_done": "Terminé ✓",
+    "splash_loading": "Initialisation du moteur Mazekty Pro...",
+    "splash_ready": "Bienvenue sur Mazekty Pro",
+    "loading_view": "Chargement...",
+    "sound_toggle_title": "Activer / Couper le son",
   },
   "de": {
+    "auto_retry_end": "Fehlgeschlagene Downloads am Ende der Warteschlange wiederholen",
+    "btn_denoise_execute": "Audio Entrauschen",
+    "btn_identify_execute": "Titel Erkennen",
+    "btn_merge_execute": "Zusammenfügen & DJ-Mix",
+    "btn_retry_failed": "Fehlgeschlagene Wiederholen",
+    "btn_retry_now": "Jetzt Wiederholen 🔄",
+    "btn_stems_execute": "4 Spuren Extrahieren",
+    "clipboard_detected": "Musik-Link in Zwischenablage erkannt!",
+    "clipboard_monitor": "Intelligente Zwischenablage-Überwachung",
+    "crossfade_duration": "Überblendungsdauer:",
+    "denoise_desc": "Entfernt Hintergrundrauschen und Zischen für klare Stimmen.",
+    "denoise_hint": "💡 Ideal für Sprachaufnahmen, Podcasts und verrauschte Dateien.",
+    "denoise_title": "Audio-Entrauschung & Stimmfilter",
+    "identify_desc": "Scannt unbekannte Songs für Titel, Künstler, Album und HD-Cover.",
+    "identify_title": "Song-Erkennung (Shazam-Stil)",
+    "merger_desc": "Verbindet zwei Tracks mit fließender Überblendung.",
+    "merger_title": "Audio-Zusammenführung & DJ-Crossfade",
+    "retry_modal_title": "Format / Qualität Ändern & Wiederholen",
+    "select_track1_label": "Erster Track:",
+    "select_track2_label": "Zweiter Track:",
+    "sleep_timer_desc": "Lautstärke wird allmählich ausgeblendet bis zum Stopp:",
+    "sleep_timer_title": "Intelligenter Schlummermodus",
+    "stems_desc": "Trennt Songs in 4 Spuren: Gesang, Musik, Bass und Schlagzeug.",
+    "stems_title": "KI-Spurentrennung (4 Stems)",
+    "supported_platforms": "Unterstützte Plattformen:",
+    "vis_modal_title": "Live-Neon-Spektrumanalysator",
+    "lyrics_title": "Synchrone Songtexte",
+    "lyrics_loading": "Synchronisierte Songtexte werden geladen...",
+    "lyrics_not_found": "Keine synchronisierten Texte gefunden.",
+    "lyrics_synced": "Karaoke Synchronisiert ✓",
+    "lyrics_plain": "Einfacher Text",
+    "btn_save_lrc": ".lrc-Datei Speichern",
+    "lrc_saved": "LRC-Datei erfolgreich gespeichert!",
+    "btn_mini_player": "Schwebender Mini-Player",
+    "btn_visualizer": "Spektrum-Visualisierer",
+    "btn_sleep_timer": "Schlummerfunktion",
+    "sleep_timer_active": "Schlummerfunktion aktiv: {min}m verbleibend",
+    "sleep_timer_off": "Schlummerfunktion deaktiviert",
+    "toast_download_now": "Jetzt Herunterladen",
+    "toast_ignore": "Schließen",
     "app_brand": "Mazekty",
     "nav_downloader": "Downloader",
     "nav_search": "Direktsuche",
@@ -854,9 +1218,90 @@ const i18n = {
     "btn_copy": "Kopieren",
     "btn_open": "Öffnen",
     "btn_ping": "Testen",
-    "qr_loading": "QR-Code wird generiert..."
+    "qr_loading": "QR-Code wird generiert...",
+    "lang_select_label": "Sprache / Language",
+    "url_placeholder": "Links hier einfügen... Video, Playlist oder mehrere URLs (eine pro Zeile)...",
+    "search_input_placeholder": "Nach Song oder Künstler suchen... (z. B. Adele, Coldplay)...",
+    "library_filter_placeholder": "Titel nach Namen filtern...",
+    "tab_sync_playlist_placeholder": "z.B. Mazekty Top Hits",
+    "range_to": "bis",
+    "pro_hero_title": "Mazekty Pro Studio",
+    "pro_hero_subtitle": "Erweiterte Audiowerkzeuge, die zu 100 % lokal ohne Abonnements laufen.",
+    "spatial_hint": "💡 Für das beste räumliche 360°-Audioerlebnis werden Kopfhörer empfohlen.",
+    "opt_format_mp3": "🎵 MP3 (Universeller Standard)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC Hohe Qualität)",
+    "opt_format_flac": "💎 FLAC (Verlustfreie Studioqualität)",
+    "opt_format_wav": "🎙️ WAV (Unkomprimierter Studio-Master)",
+    "opt_format_mp4": "🎬 MP4 (HD-Video & Audio)",
+    "opt_quality_320": "⚡ 320 kbps (Ultra HD - Höchste Qualität)",
+    "opt_quality_256": "✨ 256 kbps (Hohe Qualität)",
+    "opt_quality_192": "🎵 192 kbps (Mittlere Qualität)",
+    "opt_quality_128": "📦 128 kbps (Standard - Kleinere Datei)",
+    "opt_speed_unlimited": "🚀 Unbegrenzt (Maximale Geschwindigkeit)",
+    "opt_speed_3mb": "⚡ 3 MB/s (Schnell & Ausgewogen)",
+    "opt_speed_1mb": "🌐 1 MB/s (Datensparend)",
+    "opt_speed_500kb": "🐌 500 KB/s (Geringe Bandbreite)",
+    "opt_eq_bass": "🔊 Bass Boost (Tiefer Bass)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Klare Stimmen)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Live-Dynamik)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Kraftvolle Beats)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Sprachisolierung)",
+    "opt_theme_dark": "🌌 Dark Glass (Standard)",
+    "opt_theme_oled": "🖤 OLED Black (Reines Schwarz)",
+    "opt_theme_light": "☀️ Light Modern (Hell & Modern)",
+    "setting_license_title": "Mazekty PRO Lizenz",
+    "setting_license_desc": "Alle PRO-Funktionen sind dauerhaft aktiv und 100% kostenlos.",
+    "setting_license_active": "✓ Lebenslang aktiviert",
+    "modal_step1": "✓ Schritt 1: iPhone-Kamera öffnen und QR-Code scannen.",
+    "modal_step2": "✓ Schritt 2: Safari öffnet sofort Ihren Web-Player.",
+    "modal_step3": "✓ Schritt 3: 'Alle als ZIP herunterladen' tippen für Dateien-App oder im Hintergrund hören!",
+    "btn_done": "Fertig ✓",
+    "splash_loading": "Mazekty Pro Audio-Engine wird initialisiert...",
+    "splash_ready": "Willkommen bei Mazekty Pro",
+    "loading_view": "Wird geladen...",
+    "sound_toggle_title": "Soundeffekte ein/aus",
   },
   "tr": {
+    "auto_retry_end": "Kuyruk sonunda başarısız indirmeleri otomatik tekrar dene",
+    "btn_denoise_execute": "Gürültüyü Temizle",
+    "btn_identify_execute": "Parçayı Tanı",
+    "btn_merge_execute": "Birleştir ve DJ Miksi Oluştur",
+    "btn_retry_failed": "Başarısızları Tekrar Dene",
+    "btn_retry_now": "Şimdi Tekrar Dene 🔄",
+    "btn_stems_execute": "4 Parçayı Ayrıştır",
+    "clipboard_detected": "Yeni Müzik Bağlantısı Kopyalandı!",
+    "clipboard_monitor": "Akıllı Pano Otomatik İzleme",
+    "crossfade_duration": "Çapraz Geçiş Süresi:",
+    "denoise_desc": "Mikrofon cızırtısını ve arka plan gürültüsünü temizler.",
+    "denoise_hint": "💡 Ses kayıtları, podcastler ve gürültülü dosyalar için idealdir.",
+    "denoise_title": "Ses Gürültü Giderici (De-Noise)",
+    "identify_desc": "Bilinmeyen parçayı tarar; başlık, sanatçı, albüm ve HD kapak getirir.",
+    "identify_title": "Parça Tanımlayıcı (Shazam Benzeri)",
+    "merger_desc": "İki parçayı akıcı DJ geçişi ile birbirine bağlar.",
+    "merger_title": "Ses Birleştirici ve DJ Crossfade",
+    "retry_modal_title": "Formatı / Kaliteyi Değiştir ve Tekrar Dene",
+    "select_track1_label": "Birinci Parça:",
+    "select_track2_label": "İkinci Parça:",
+    "sleep_timer_desc": "Ses kademeli olarak kısılacak ve oynatıcı duracaktır:",
+    "sleep_timer_title": "Akıllı Uyku Zamanlayıcı",
+    "stems_desc": "Şarkıyı 4 bağımsız kanala ayırır: Vokal, Müzik, Bas ve Davul.",
+    "stems_title": "Yapay Zeka Kanal Ayrıştırıcı (4 Stems)",
+    "supported_platforms": "Desteklenen Platformlar:",
+    "vis_modal_title": "Canlı Neon Spektrum Görselleştirici",
+    "lyrics_title": "Senkronize Şarkı Sözleri",
+    "lyrics_loading": "Senkronize sözler yükleniyor...",
+    "lyrics_not_found": "Bu parça için senkronize söz bulunamadı.",
+    "lyrics_synced": "Karaoke Senkronize ✓",
+    "lyrics_plain": "Düz Metin Sözler",
+    "btn_save_lrc": ".lrc Dosyasını Kaydet",
+    "lrc_saved": "LRC dosyası başarıyla kaydedildi!",
+    "btn_mini_player": "Mini Kayan Oynatıcı",
+    "btn_visualizer": "Spektrum Görselleştirici",
+    "btn_sleep_timer": "Uyku Zamanlayıcı",
+    "sleep_timer_active": "Uyku zamanlayıcı aktif: {min}dk kaldı",
+    "sleep_timer_off": "Uyku zamanlayıcı kapatıldı",
+    "toast_download_now": "Şimdi İndir",
+    "toast_ignore": "Kapat",
     "app_brand": "Mazekty",
     "nav_downloader": "İndirici",
     "nav_search": "Doğrudan Arama",
@@ -1022,9 +1467,90 @@ const i18n = {
     "btn_copy": "Kopyala",
     "btn_open": "Aç",
     "btn_ping": "Test Et",
-    "qr_loading": "QR Kod oluşturuluyor..."
+    "qr_loading": "QR Kod oluşturuluyor...",
+    "lang_select_label": "Dil / Language",
+    "url_placeholder": "Bağlantıları buraya yapıştırın... Video, Playlist veya birden fazla bağlantı (her satıra bir)...",
+    "search_input_placeholder": "Şarkı veya sanatçı adına göre ara... (ör. Tarkan, Adele)...",
+    "library_filter_placeholder": "Parçaları ada göre filtrele...",
+    "tab_sync_playlist_placeholder": "ör. Mazekty Top Hits",
+    "range_to": "ile",
+    "pro_hero_title": "Mazekty Pro Stüdyo",
+    "pro_hero_subtitle": "Abonelik gerektirmeyen, tamamen yerel çalışan gelişmiş ses mühendisliği araçları.",
+    "spatial_hint": "💡 En iyi 360° uzamsal ses deneyimi için kulaklık kullanılması önerilir.",
+    "opt_format_mp3": "🎵 MP3 (Evrensel Standart)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC Yüksek Kalite)",
+    "opt_format_flac": "💎 FLAC (Kayıpsız Stüdyo Kalitesi)",
+    "opt_format_wav": "🎙️ WAV (Ham Stüdyo Master)",
+    "opt_format_mp4": "🎬 MP4 (HD Video ve Ses)",
+    "opt_quality_320": "⚡ 320 kbps (Ultra HD - En Yüksek Kalite)",
+    "opt_quality_256": "✨ 256 kbps (Yüksek Kalite)",
+    "opt_quality_192": "🎵 192 kbps (Orta Kalite)",
+    "opt_quality_128": "📦 128 kbps (Standart - Küçük Boyut)",
+    "opt_speed_unlimited": "🚀 Sınırsız (Maksimum Hız)",
+    "opt_speed_3mb": "⚡ 3 MB/sn (Dengeli Hızlı)",
+    "opt_speed_1mb": "🌐 1 MB/sn (Kota Tasarrufu)",
+    "opt_speed_500kb": "🐌 500 KB/sn (Düşük Bant Genişliği)",
+    "opt_eq_bass": "🔊 Bass Boost (Derin Bas Gücü)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Net Vokal)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Canlı Enerji)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Güçlü Ritimler)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Ses İzolasyonu)",
+    "opt_theme_dark": "🌌 Dark Glass (Varsayılan)",
+    "opt_theme_oled": "🖤 OLED Black (Tam Siyah)",
+    "opt_theme_light": "☀️ Light Modern (Açık Tema)",
+    "setting_license_title": "Mazekty PRO Lisansı",
+    "setting_license_desc": "Profesyonel özellikler kalıcı olarak aktif ve %100 ücretsizdir.",
+    "setting_license_active": "✓ Ömür Boyu Aktif",
+    "modal_step1": "✓ Adım 1: iPhone kamerasını açın ve QR kodunu tarayın.",
+    "modal_step2": "✓ Adım 2: Safari web oynatıcınızı anında açacaktır.",
+    "modal_step3": "✓ Adım 3: 'Tümünü ZIP İndir'e basarak Dosyalar uygulamasına kaydedin veya arka planda çalın!",
+    "btn_done": "Kapat ✓",
+    "splash_loading": "Mazekty Pro ses motoru başlatılıyor...",
+    "splash_ready": "Mazekty Pro'ya Hoş Geldiniz",
+    "loading_view": "Yükleniyor...",
+    "sound_toggle_title": "Ses Efektlerini Aç / Kapat",
   },
   "pt": {
+    "auto_retry_end": "Tentar novamente downloads com falha no fim da fila",
+    "btn_denoise_execute": "Limpar Ruído do Áudio",
+    "btn_identify_execute": "Identificar Faixa",
+    "btn_merge_execute": "Mesclar e Criar Mix DJ",
+    "btn_retry_failed": "Repetir Falhas",
+    "btn_retry_now": "Tentar Novamente 🔄",
+    "btn_stems_execute": "Extrair 4 Pistas Agora",
+    "clipboard_detected": "Link de música copiado!",
+    "clipboard_monitor": "Monitor Inteligente da Área de Transferência",
+    "crossfade_duration": "Duração do Crossfade:",
+    "denoise_desc": "Remove chiados e ruídos de fundo para vozes nítidas.",
+    "denoise_hint": "💡 Ideal para gravações de voz, podcasts e arquivos com ruído.",
+    "denoise_title": "Redutor de Ruído e Clarificador de Voz",
+    "identify_desc": "Analisa áudios para obter título, artista, álbum e capa HD.",
+    "identify_title": "Identificador de Faixas (Estilo Shazam)",
+    "merger_desc": "Mescla duas músicas com transição suave crossfade.",
+    "merger_title": "Mesclador de Áudio e DJ Crossfade",
+    "retry_modal_title": "Alterar Formato / Qualidade e Repetir",
+    "select_track1_label": "Primeira Faixa:",
+    "select_track2_label": "Segunda Faixa:",
+    "sleep_timer_desc": "O volume diminuirá gradualmente até a pausa:",
+    "sleep_timer_title": "Temporizador de Suspensão",
+    "stems_desc": "Divide músicas em 4 pistas: Voz, Música, Baixo e Bateria.",
+    "stems_title": "Separador de Faixas IA (4 Stems)",
+    "supported_platforms": "Plataformas Suportadas:",
+    "vis_modal_title": "Visualizador de Espectro Neon",
+    "lyrics_title": "Letras Sincronizadas",
+    "lyrics_loading": "Buscando letras sincronizadas...",
+    "lyrics_not_found": "Nenhuma letra sincronizada encontrada.",
+    "lyrics_synced": "Karaokê Sincronizado ✓",
+    "lyrics_plain": "Letra em Texto",
+    "btn_save_lrc": "Salvar Arquivo .lrc",
+    "lrc_saved": "Arquivo LRC salvo com sucesso!",
+    "btn_mini_player": "Mini Player Flutuante",
+    "btn_visualizer": "Visualizador de Espectro",
+    "btn_sleep_timer": "Temporizador",
+    "sleep_timer_active": "Temporizador ativo: {min}m restantes",
+    "sleep_timer_off": "Temporizador desativado",
+    "toast_download_now": "Baixar Agora",
+    "toast_ignore": "Dispensar",
     "app_brand": "Mazekty",
     "nav_downloader": "Baixador",
     "nav_search": "Pesquisa Direta",
@@ -1190,9 +1716,90 @@ const i18n = {
     "btn_copy": "Copiar",
     "btn_open": "Abrir",
     "btn_ping": "Testar",
-    "qr_loading": "Gerando QR Code..."
+    "qr_loading": "Gerando QR Code...",
+    "lang_select_label": "Idioma / Language",
+    "url_placeholder": "Cole os links aqui... Vídeo, playlist ou vários links (um por linha)...",
+    "search_input_placeholder": "Pesquisar por música ou artista... (ex: Adele, Coldplay)...",
+    "library_filter_placeholder": "Filtrar faixas por nome...",
+    "tab_sync_playlist_placeholder": "ex: Mazekty Top Hits",
+    "range_to": "até",
+    "pro_hero_title": "Estúdio Mazekty Pro",
+    "pro_hero_subtitle": "Ferramentas avançadas de engenharia de áudio rodando 100% localmente sem assinaturas.",
+    "spatial_hint": "💡 Recomenda-se fones de ouvido para a melhor experiência espacial 360°.",
+    "opt_format_mp3": "🎵 MP3 (Padrão Universal)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC Alta Qualidade)",
+    "opt_format_flac": "💎 FLAC (Lossless Qualidade Estúdio)",
+    "opt_format_wav": "🎙️ WAV (Master de Estúdio Bruto)",
+    "opt_format_mp4": "🎬 MP4 (Vídeo e Áudio HD)",
+    "opt_quality_320": "⚡ 320 kbps (Ultra HD - Qualidade Máxima)",
+    "opt_quality_256": "✨ 256 kbps (Alta Qualidade)",
+    "opt_quality_192": "🎵 192 kbps (Qualidade Média)",
+    "opt_quality_128": "📦 128 kbps (Padrão - Menor Tamanho)",
+    "opt_speed_unlimited": "🚀 Ilimitado (Velocidade Máxima)",
+    "opt_speed_3mb": "⚡ 3 MB/s (Rápido e Equilibrado)",
+    "opt_speed_1mb": "🌐 1 MB/s (Economia de Dados)",
+    "opt_speed_500kb": "🐌 500 KB/s (Baixo Consumo)",
+    "opt_eq_bass": "🔊 Bass Boost (Graves Profundos)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Vozes Claras)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Energia ao Vivo)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Batidas Fortes)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Isolamento de Voz)",
+    "opt_theme_dark": "🌌 Dark Glass (Padrão)",
+    "opt_theme_oled": "🖤 OLED Black (Preto Puro)",
+    "opt_theme_light": "☀️ Light Modern (Claro Moderno)",
+    "setting_license_title": "Licença Mazekty PRO",
+    "setting_license_desc": "Recursos profissionais permanentemente ativos e 100% gratuitos.",
+    "setting_license_active": "✓ Ativo Vitalício",
+    "modal_step1": "✓ Passo 1: Abra a câmera do iPhone e escaneie o código QR.",
+    "modal_step2": "✓ Passo 2: O Safari abrirá seu player instantaneamente.",
+    "modal_step3": "✓ Passo 3: Toque em 'Baixar tudo em ZIP' para salvar no app Arquivos ou ouça em segundo plano!",
+    "btn_done": "Concluído ✓",
+    "splash_loading": "Inicializando motor de áudio Mazekty Pro...",
+    "splash_ready": "Bem-vindo ao Mazekty Pro",
+    "loading_view": "Carregando...",
+    "sound_toggle_title": "Ativar / Desativar Sons",
   },
   "ru": {
+    "auto_retry_end": "Автоматически повторять неудачные загрузки в конце очереди",
+    "btn_denoise_execute": "Очистить и Удалить Шум",
+    "btn_identify_execute": "Опознать Трек",
+    "btn_merge_execute": "Объединить и Сделать DJ-Микс",
+    "btn_retry_failed": "Повторить Неудачные",
+    "btn_retry_now": "Повторить Сейчас 🔄",
+    "btn_stems_execute": "Разделить на 4 Дорожки",
+    "clipboard_detected": "Обнаружена скопированная ссылка на музыку!",
+    "clipboard_monitor": "Умный Монитор Буфера Обмена",
+    "crossfade_duration": "Длительность Перехода:",
+    "denoise_desc": "Удаляет шипение микрофона и фоновый шум для чистоты голоса.",
+    "denoise_hint": "💡 Идеально для голосовых записей, подкастов и зашумленных файлов.",
+    "denoise_title": "Шумоподавление и Очистка Голоса",
+    "identify_desc": "Сканирует неизвестные треки: определяет название, автора, альбом и HD-обложку.",
+    "identify_title": "Определитель Треков (Аналог Shazam)",
+    "merger_desc": "Бесшовно объединяет два трека с плавным кроссфейдом.",
+    "merger_title": "Сведение Аудио и DJ Crossfade",
+    "retry_modal_title": "Изменить Формат / Качество и Повторить",
+    "select_track1_label": "Первый Трек:",
+    "select_track2_label": "Второй Трек:",
+    "sleep_timer_desc": "Громкость плавно убавится, и плеер остановится автоматически:",
+    "sleep_timer_title": "Умный Таймер Сна",
+    "stems_desc": "Разделяет любой трек на 4 дорожки: Вокал, Музыка, Бас и Ударные.",
+    "stems_title": "ИИ-Разделитель Дорожек (4 Stems)",
+    "supported_platforms": "Поддерживаемые Платформы:",
+    "vis_modal_title": "Неоновый Спектральный Анализатор",
+    "lyrics_title": "Синхронизированный Текст",
+    "lyrics_loading": "Загрузка караоке-текста...",
+    "lyrics_not_found": "Синхронизированный текст не найден.",
+    "lyrics_synced": "Караоке Синхронизировано ✓",
+    "lyrics_plain": "Обычный Текст",
+    "btn_save_lrc": "Сохранить Файл .lrc",
+    "lrc_saved": "Файл LRC успешно сохранен!",
+    "btn_mini_player": "Мини Плавающий Плеер",
+    "btn_visualizer": "Спектральный Анализатор",
+    "btn_sleep_timer": "Таймер Сна",
+    "sleep_timer_active": "Таймер сна активен: осталось {min} мин",
+    "sleep_timer_off": "Таймер сна выключен",
+    "toast_download_now": "Скачать Сейчас",
+    "toast_ignore": "Закрыть",
     "app_brand": "Mazekty",
     "nav_downloader": "Загрузчик",
     "nav_search": "Прямой поиск",
@@ -1358,7 +1965,48 @@ const i18n = {
     "btn_copy": "Копировать",
     "btn_open": "Открыть",
     "btn_ping": "Проверить",
-    "qr_loading": "Генерация QR-кода..."
+    "qr_loading": "Генерация QR-кода...",
+    "lang_select_label": "Язык / Language",
+    "url_placeholder": "Вставьте ссылки сюда... Видео, плейлист или несколько ссылок (по одной в строке)...",
+    "search_input_placeholder": "Поиск по названию трека или исполнителю... (напр. Adele, Coldplay)...",
+    "library_filter_placeholder": "Фильтр треков по названию...",
+    "tab_sync_playlist_placeholder": "напр. Mazekty Top Hits",
+    "range_to": "до",
+    "pro_hero_title": "Студия Mazekty Pro",
+    "pro_hero_subtitle": "Продвинутые инструменты аудиообработки, работающие на 100% локально без подписок.",
+    "spatial_hint": "💡 Рекомендуется использовать наушники для максимального 360° пространственного звучания.",
+    "opt_format_mp3": "🎵 MP3 (Универсальный стандарт)",
+    "opt_format_m4a": "🍎 M4A (Apple AAC высокое качество)",
+    "opt_format_flac": "💎 FLAC (Студийное без потерь Lossless)",
+    "opt_format_wav": "🎙️ WAV (Несжатый студийный мастер)",
+    "opt_format_mp4": "🎬 MP4 (HD Видео и аудио)",
+    "opt_quality_320": "⚡ 320 кбит/с (Ultra HD - Максимальное)",
+    "opt_quality_256": "✨ 256 кбит/с (Высокое качество)",
+    "opt_quality_192": "🎵 192 кбит/с (Среднее качество)",
+    "opt_quality_128": "📦 128 кбит/с (Стандарт - Меньший размер)",
+    "opt_speed_unlimited": "🚀 Без ограничений (Макс. скорость)",
+    "opt_speed_3mb": "⚡ 3 МБ/с (Быстро и стабильно)",
+    "opt_speed_1mb": "🌐 1 МБ/с (Экономия трафика)",
+    "opt_speed_500kb": "🐌 500 КБ/с (Медленное соединение)",
+    "opt_eq_bass": "🔊 Bass Boost (Мощный бас)",
+    "opt_eq_vocal": "🎤 Vocal Clarity (Чистый вокал)",
+    "opt_eq_rock": "🎸 Rock & Acoustic (Живой звук)",
+    "opt_eq_electro": "⚡ Electronic / Dance (Энергичные биты)",
+    "opt_eq_podcast": "🎙️ Podcast & Voice (Выделение речи)",
+    "opt_theme_dark": "🌌 Dark Glass (По умолчанию)",
+    "opt_theme_oled": "🖤 OLED Black (Глубокий черный)",
+    "opt_theme_light": "☀️ Light Modern (Светлая тема)",
+    "setting_license_title": "Лицензия Mazekty PRO",
+    "setting_license_desc": "Профессиональные функции активны навсегда и на 100% бесплатны.",
+    "setting_license_active": "✓ Активно навсегда",
+    "modal_step1": "✓ Шаг 1: Откройте камеру iPhone и отсканируйте QR-код.",
+    "modal_step2": "✓ Шаг 2: В Safari мгновенно откроется веб-плеер.",
+    "modal_step3": "✓ Шаг 3: Нажмите 'Скачать все в ZIP' для сохранения в 'Файлы' или слушайте в фоне!",
+    "btn_done": "Закрыть ✓",
+    "splash_loading": "Инициализация аудиодвижка Mazekty Pro...",
+    "splash_ready": "Добро пожаловать в Mazekty Pro",
+    "loading_view": "Загрузка...",
+    "sound_toggle_title": "Вкл / Выкл звуковые эффекты",
   }
 };
 
@@ -1513,6 +2161,7 @@ renderBg();
 const navItems = document.querySelectorAll('.nav-item');
 const viewPanels = document.querySelectorAll('.view-panel');
 const stageTitle = document.getElementById('stageTitle');
+const sidebarLangSelect = document.getElementById('sidebarLangSelect');
 const btnToggleLang = document.getElementById('btnToggleLang');
 const langBadge = document.getElementById('langBadge');
 const btnToggleSound = document.getElementById('btnToggleSound');
@@ -1521,6 +2170,15 @@ const btnQuickFolder = document.getElementById('btnQuickFolder');
 const topFolderLabel = document.getElementById('topFolderLabel');
 const btnOpenSidebarFolder = document.getElementById('btnOpenSidebarFolder');
 const osBadgeLabel = document.getElementById('osBadgeLabel');
+
+// Splash & Progress Elements
+const appSplashScreen = document.getElementById('appSplashScreen');
+const splashProgressFill = document.getElementById('splashProgressFill');
+const splashStatusText = document.getElementById('splashStatusText');
+const topProgressBar = document.getElementById('topProgressBar');
+const topProgressBarFill = document.getElementById('topProgressBarFill');
+const viewSpinnerOverlay = document.getElementById('viewSpinnerOverlay');
+const viewSpinnerText = document.getElementById('viewSpinnerText');
 
 // Downloader Elements
 const urlInput = document.getElementById('urlInput');
@@ -1665,6 +2323,67 @@ const globalAudioPlayer = document.getElementById('globalAudioPlayer');
 const btnPlayerAppleSync = document.getElementById('btnPlayerAppleSync');
 const btnPlayerClose = document.getElementById('btnPlayerClose');
 
+// --- NEW FEATURES DOM REFERENCES ---
+const platformChips = document.querySelectorAll('.platform-chip');
+const autoRetryFailedToggle = document.getElementById('autoRetryFailedToggle');
+const btnRetryFailed = document.getElementById('btnRetryFailed');
+
+const retryModalOverlay = document.getElementById('retryModalOverlay');
+const btnCloseRetryModal = document.getElementById('btnCloseRetryModal');
+const btnCancelRetryModal = document.getElementById('btnCancelRetryModal');
+const btnConfirmRetrySingle = document.getElementById('btnConfirmRetrySingle');
+const retryItemId = document.getElementById('retryItemId');
+const retryTrackTitleText = document.getElementById('retryTrackTitleText');
+const retryFormatSelect = document.getElementById('retryFormatSelect');
+const retryQualitySelect = document.getElementById('retryQualitySelect');
+
+const clipboardMonitorToggle = document.getElementById('clipboardMonitorToggle');
+const clipboardToast = document.getElementById('clipboardToast');
+const clipboardToastUrl = document.getElementById('clipboardToastUrl');
+const btnClipboardAdd = document.getElementById('btnClipboardAdd');
+const btnClipboardDismiss = document.getElementById('btnClipboardDismiss');
+
+const btnPlayerLyrics = document.getElementById('btnPlayerLyrics');
+const btnPlayerVisualizer = document.getElementById('btnPlayerVisualizer');
+const btnPlayerSleepTimer = document.getElementById('btnPlayerSleepTimer');
+const btnPlayerMini = document.getElementById('btnPlayerMini');
+
+const lyricsDrawer = document.getElementById('lyricsDrawer');
+const btnCloseLyrics = document.getElementById('btnCloseLyrics');
+const lyricsTrackTitle = document.getElementById('lyricsTrackTitle');
+const lyricsArtistName = document.getElementById('lyricsArtistName');
+const btnSaveLrc = document.getElementById('btnSaveLrc');
+const lyricsContainer = document.getElementById('lyricsContainer');
+
+const visualizerOverlay = document.getElementById('visualizerOverlay');
+const btnCloseVisualizer = document.getElementById('btnCloseVisualizer');
+const visModeSelect = document.getElementById('visModeSelect');
+const spectrumCanvas = document.getElementById('spectrumCanvas');
+
+const sleepTimerModal = document.getElementById('sleepTimerModal');
+const btnCloseSleepTimer = document.getElementById('btnCloseSleepTimer');
+const sleepTimerStatus = document.getElementById('sleepTimerStatus');
+const sleepOptionBtns = document.querySelectorAll('.sleep-option-btn');
+
+// Studio Tools 11-14 DOM References
+const stemsFileSelect = document.getElementById('stemsFileSelect');
+const btnDoStems = document.getElementById('btnDoStems');
+const stemsFeedback = document.getElementById('stemsFeedback');
+
+const mergeFileSelect1 = document.getElementById('mergeFileSelect1');
+const mergeFileSelect2 = document.getElementById('mergeFileSelect2');
+const crossfadeSlider = document.getElementById('crossfadeSlider');
+const crossfadeValueLabel = document.getElementById('crossfadeValueLabel');
+const btnDoMerge = document.getElementById('btnDoMerge');
+
+const denoiseFileSelect = document.getElementById('denoiseFileSelect');
+const btnDoDenoise = document.getElementById('btnDoDenoise');
+
+const identifyFileSelect = document.getElementById('identifyFileSelect');
+const btnDoIdentify = document.getElementById('btnDoIdentify');
+const identifyResultBox = document.getElementById('identifyResultBox');
+
+
 // --- Navigation Handling ---
 navItems.forEach(item => {
   item.addEventListener('click', () => {
@@ -1674,21 +2393,100 @@ navItems.forEach(item => {
   });
 });
 
+// --- Top Progress & View Spinner Management ---
+function showTopProgress() {
+  if (topProgressBar) topProgressBar.classList.add('active');
+}
+
+function hideTopProgress() {
+  if (topProgressBar) topProgressBar.classList.remove('active');
+}
+
+function showViewSpinner(textKey = 'loading_view') {
+  if (viewSpinnerOverlay) {
+    if (viewSpinnerText && i18n[currentLang] && i18n[currentLang][textKey]) {
+      viewSpinnerText.textContent = i18n[currentLang][textKey];
+    }
+    viewSpinnerOverlay.classList.add('show');
+  }
+}
+
+function hideViewSpinner() {
+  if (viewSpinnerOverlay) {
+    viewSpinnerOverlay.classList.remove('show');
+  }
+}
+
+// --- Splash Screen Lifecycle ---
+let splashDismissed = false;
+function dismissSplashScreen() {
+  if (splashDismissed || !appSplashScreen) return;
+  splashDismissed = true;
+  if (splashProgressFill) splashProgressFill.style.width = '100%';
+  if (splashStatusText && i18n[currentLang] && i18n[currentLang].splash_ready) {
+    splashStatusText.textContent = i18n[currentLang].splash_ready;
+  }
+  setTimeout(() => {
+    appSplashScreen.classList.add('fade-out');
+    setTimeout(() => {
+      appSplashScreen.style.display = 'none';
+    }, 600);
+  }, 400);
+}
+
+// Animate splash progress on startup
+if (splashProgressFill) {
+  setTimeout(() => { if (!splashDismissed) splashProgressFill.style.width = '45%'; }, 150);
+  setTimeout(() => { if (!splashDismissed) splashProgressFill.style.width = '80%'; }, 500);
+}
+// Fallback dismissal
+setTimeout(dismissSplashScreen, 1200);
+
 function switchView(viewName) {
+  if (activeView === viewName) return;
   activeView = viewName;
   navItems.forEach(nav => nav.classList.toggle('active', nav.dataset.view === viewName));
   viewPanels.forEach(panel => panel.classList.toggle('active', panel.id === `view-${viewName}`));
 
   const titleKey = `nav_${viewName}`;
-  if (stageTitle && i18n[currentLang][titleKey]) {
+  if (stageTitle && i18n[currentLang] && i18n[currentLang][titleKey]) {
     stageTitle.textContent = i18n[currentLang][titleKey];
   }
 
+  showTopProgress();
+
   if (viewName === 'library' || viewName === 'studio') {
-    fetchLibrary();
-  }
-  if (viewName === 'sync') {
-    loadSyncTabState();
+    showViewSpinner();
+    const p = fetchLibrary();
+    if (p && p.finally) {
+      p.finally(() => {
+        hideViewSpinner();
+        hideTopProgress();
+      });
+    } else {
+      setTimeout(() => {
+        hideViewSpinner();
+        hideTopProgress();
+      }, 300);
+    }
+  } else if (viewName === 'sync') {
+    showViewSpinner();
+    const p = loadSyncTabState();
+    if (p && p.finally) {
+      p.finally(() => {
+        hideViewSpinner();
+        hideTopProgress();
+      });
+    } else {
+      setTimeout(() => {
+        hideViewSpinner();
+        hideTopProgress();
+      }, 300);
+    }
+  } else {
+    setTimeout(() => {
+      hideTopProgress();
+    }, 250);
   }
 }
 
@@ -1704,12 +2502,17 @@ formatSelect.addEventListener('change', () => {
 
 // --- Theme and Accent Management ---
 function applyTheme(themeMode, accentColor) {
-  document.documentElement.setAttribute('data-theme', themeMode || 'dark');
-  document.documentElement.setAttribute('data-accent', accentColor || 'violet');
-  
-  if (settingsThemeModeSelect) settingsThemeModeSelect.value = themeMode || 'dark';
+  const currentMode = themeMode || document.documentElement.getAttribute('data-theme') || localStorage.getItem('mazekty_theme_mode') || 'dark';
+  const currentAccent = accentColor || document.documentElement.getAttribute('data-accent') || localStorage.getItem('mazekty_theme_accent') || 'violet';
+  document.documentElement.setAttribute('data-theme', currentMode);
+  document.documentElement.setAttribute('data-accent', currentAccent);
+  try {
+    localStorage.setItem('mazekty_theme_mode', currentMode);
+    localStorage.setItem('mazekty_theme_accent', currentAccent);
+  } catch(e) {}
+  if (settingsThemeModeSelect) settingsThemeModeSelect.value = currentMode;
   colorDots.forEach(dot => {
-    dot.classList.toggle('active', dot.dataset.color === (accentColor || 'violet'));
+    dot.classList.toggle('active', dot.dataset.color === currentAccent);
   });
 }
 
@@ -1731,16 +2534,27 @@ colorDots.forEach(dot => {
 // --- Language Switching (8 Global Languages) ---
 const supportedLanguages = ['en', 'ar', 'es', 'fr', 'de', 'tr', 'pt', 'ru'];
 
-btnToggleLang.addEventListener('click', () => {
-  playUiSound('pop');
-  const currentIndex = supportedLanguages.indexOf(currentLang);
-  const nextIndex = (currentIndex + 1) % supportedLanguages.length;
-  setLanguage(supportedLanguages[nextIndex]);
-});
+if (sidebarLangSelect) {
+  sidebarLangSelect.addEventListener('change', () => {
+    playUiSound('pop');
+    setLanguage(sidebarLangSelect.value);
+  });
+}
 
-settingsLangSelect.addEventListener('change', () => {
-  setLanguage(settingsLangSelect.value);
-});
+if (btnToggleLang) {
+  btnToggleLang.addEventListener('click', () => {
+    playUiSound('pop');
+    const currentIndex = supportedLanguages.indexOf(currentLang);
+    const nextIndex = (currentIndex + 1) % supportedLanguages.length;
+    setLanguage(supportedLanguages[nextIndex]);
+  });
+}
+
+if (settingsLangSelect) {
+  settingsLangSelect.addEventListener('change', () => {
+    setLanguage(settingsLangSelect.value);
+  });
+}
 
 function setLanguage(lang) {
   if (!i18n[lang]) lang = 'en';
@@ -1748,14 +2562,36 @@ function setLanguage(lang) {
   document.documentElement.lang = lang;
   document.documentElement.dir = (lang === 'ar' ? 'rtl' : 'ltr');
   if (langBadge) langBadge.textContent = lang.toUpperCase();
+  if (sidebarLangSelect) sidebarLangSelect.value = lang;
   if (settingsLangSelect) settingsLangSelect.value = lang;
 
+  // 1. Text elements
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.dataset.i18n;
     if (i18n[lang] && i18n[lang][key]) {
       el.textContent = i18n[lang][key];
     } else if (i18n['en'] && i18n['en'][key]) {
       el.textContent = i18n['en'][key];
+    }
+  });
+
+  // 2. Placeholders
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.dataset.i18nPlaceholder;
+    if (i18n[lang] && i18n[lang][key]) {
+      el.placeholder = i18n[lang][key];
+    } else if (i18n['en'] && i18n['en'][key]) {
+      el.placeholder = i18n['en'][key];
+    }
+  });
+
+  // 3. Tooltip titles
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.dataset.i18nTitle;
+    if (i18n[lang] && i18n[lang][key]) {
+      el.title = i18n[lang][key];
+    } else if (i18n['en'] && i18n['en'][key]) {
+      el.title = i18n['en'][key];
     }
   });
 
@@ -1786,6 +2622,7 @@ function setupWebSocket() {
   socket = new WebSocket(wsUrl);
 
   socket.onopen = () => {
+    dismissSplashScreen();
     const connText = document.getElementById('connectionText');
     const connBadge = document.getElementById('connectionBadge');
     if (connText) connText.textContent = i18n[currentLang].status_connected;
@@ -1857,6 +2694,7 @@ function handleWsEvent(msg) {
       playUiSound('success');
       triggerConfetti();
       fetchLibrary();
+      checkAutoRetryAtEnd();
       break;
 
     case 'item_skipped':
@@ -1873,10 +2711,12 @@ function handleWsEvent(msg) {
       if (msg.stats) updateStats(msg.stats);
       updateTaskStatus(msg.item_id, 'error', i18n[currentLang].status_failed, msg.title, msg.error);
       playUiSound('error');
+      checkAutoRetryAtEnd();
       break;
 
     case 'stats_update':
       if (msg.stats) updateStats(msg.stats);
+      checkAutoRetryAtEnd();
       break;
   }
 }
@@ -1923,8 +2763,9 @@ function renderQueueItem(item) {
         ${formatBadge}
         <span class="task-title" title="${escapeHtml(item.title)}">${escapeHtml(item.title)}</span>
       </div>
-      <div style="display:flex; align-items:center; gap:8px;">
+      <div style="display:flex; align-items:center; gap:6px;">
         <span class="task-status-pill">${getStatusLabel(item.status)}</span>
+        <button type="button" class="btn-cancel-item task-retry-btn ${item.status === 'error' ? '' : 'hidden'}" title="تغيير الصيغة والمحاولة" onclick="openRetryModal('${item.id}', '${escapeHtml(item.title).replace(/'/g, "\\'")}')">🔄</button>
         <button type="button" class="btn-cancel-item" title="إلغاء التنزيل" onclick="cancelQueueItem('${item.id}')">✕</button>
       </div>
     </div>
@@ -1973,6 +2814,11 @@ function updateTaskStatus(itemId, statusClass, statusText, title, errorDetail) {
     if (metricsEl) metricsEl.textContent = 'تم الإلغاء من الطابور';
   } else if (statusClass === 'error') {
     if (metricsEl) metricsEl.textContent = errorDetail ? errorDetail.slice(0, 50) : 'خطأ';
+    const retryBtn = card.querySelector('.task-retry-btn');
+    if (retryBtn) retryBtn.classList.remove('hidden');
+  } else {
+    const retryBtn = card.querySelector('.task-retry-btn');
+    if (retryBtn) retryBtn.classList.add('hidden');
   }
 }
 
@@ -2033,7 +2879,7 @@ btnClear.addEventListener('click', () => {
   urlInput.focus();
 });
 
-btnClearCompleted.addEventListener('click', () => {
+btnClearCompleted.addEventListener('click', async () => {
   playUiSound('pop');
   const finishedCards = tasksList.querySelectorAll('.status-completed, .status-skipped, .status-cancelled, .status-error');
   finishedCards.forEach(c => {
@@ -2044,6 +2890,9 @@ btnClearCompleted.addEventListener('click', () => {
   if (tasksList.children.length <= 1) {
     emptyTasks.style.display = 'block';
   }
+  try {
+    await fetch('/api/queue/clear-completed', { method: 'POST' });
+  } catch (e) {}
 });
 
 // --- URL Analyzer & Playlist Range Picker ---
@@ -2516,7 +3365,9 @@ function populateStudioSelects() {
   const selects = [
     trimFileSelect, enhanceFileSelect, vocalFileSelect,
     pitchFileSelect, spatialFileSelect, eqFileSelect,
-    silenceFileSelect, artFileSelect, syncFileSelect
+    silenceFileSelect, artFileSelect, syncFileSelect,
+    stemsFileSelect, mergeFileSelect1, mergeFileSelect2,
+    denoiseFileSelect, identifyFileSelect
   ];
 
   selects.forEach(sel => {
@@ -3031,7 +3882,15 @@ async function loadSyncTabState(preferredIp = null) {
       data.available_ips.forEach(ip => {
         const opt = document.createElement('option');
         opt.value = ip;
-        opt.textContent = ip.startsWith('192.168.') ? `📶 Wi-Fi (${ip})` : `🌐 LAN (${ip})`;
+        let label = `🌐 LAN (${ip})`;
+        if (ip.startsWith('192.168.')) {
+          label = `📶 Wi-Fi (${ip})`;
+        } else if (/^172\.(?:1[6-9]|2\d|3[01])\./.test(ip)) {
+          label = `📶 Ethernet / LAN (${ip})`;
+        } else if (ip.startsWith('10.128.') || ip.startsWith('10.64.') || ip.startsWith('100.')) {
+          label = `🛡️ VPN / Tunnel (${ip})`;
+        }
+        opt.textContent = label;
         if (ip === activeIp) opt.selected = true;
         syncIpDropdown.appendChild(opt);
       });
@@ -3258,12 +4117,22 @@ if (btnTabSyncSingleMusic) {
 }
 
 // Hardware device scanner
-async function refreshSyncDevices() {
-  if (!tabSyncDevicesContainer) return;
+let isRefreshingDevices = false;
+let lastRenderedDevicesKey = null;
+
+async function refreshSyncDevices(force = false) {
+  if (!tabSyncDevicesContainer || isRefreshingDevices) return;
+  isRefreshingDevices = true;
   try {
     const res = await fetch('/api/sync/devices');
     const data = await res.json();
     const devices = data.devices || [];
+
+    const currentKey = JSON.stringify(devices.map(d => ({ id: d.id, status: d.status, model: d.model, can_adb: d.can_adb_sync })));
+    if (!force && currentKey === lastRenderedDevicesKey && tabSyncDevicesContainer.children.length > 0) {
+      return;
+    }
+    lastRenderedDevicesKey = currentKey;
 
     if (syncUsbStatusText && syncUsbDot) {
       if (devices.length > 0) {
@@ -3339,6 +4208,8 @@ async function refreshSyncDevices() {
     }
   } catch (e) {
     console.error('Device scan error:', e);
+  } finally {
+    isRefreshingDevices = false;
   }
 }
 
@@ -3393,17 +4264,17 @@ if (btnTabSyncAndroidAction) {
   });
 }
 
-// Auto-poll connected devices periodically when on sync tab
+// Auto-poll connected devices periodically when on sync tab and window is active
 setInterval(() => {
-  if (activeView === 'sync') {
-    refreshSyncDevices();
+  if (activeView === 'sync' && !document.hidden && !isRefreshingDevices) {
+    refreshSyncDevices(false);
   }
-}, 3500);
+}, 6000);
 
 if (btnTabRefreshDevices) {
   btnTabRefreshDevices.addEventListener('click', () => {
     playUiSound('pop');
-    refreshSyncDevices();
+    refreshSyncDevices(true);
   });
 }
 
@@ -3509,6 +4380,759 @@ function escapeHtml(text) {
   if (!text) return '';
   return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 }
+
+
+// ==========================================================================
+// NEW FEATURES SUITE (Mazekty Pro v2.5)
+// ==========================================================================
+
+// 1. Platform Filter Chips
+if (platformChips && platformChips.length > 0) {
+  platformChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      platformChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      playUiSound('pop');
+
+      const platform = chip.dataset.platform;
+      if (urlInput) {
+        if (platform === 'youtube') {
+          urlInput.placeholder = 'https://www.youtube.com/watch?v=... أو رابط قناة كاملة /@channel';
+        } else if (platform === 'soundcloud') {
+          urlInput.placeholder = 'https://soundcloud.com/artist/track أو رابط ألبوم ساوند كلاود...';
+        } else if (platform === 'spotify') {
+          urlInput.placeholder = 'https://open.spotify.com/track/... أو رابط ألبوم أو قائمة سبوتيفاي...';
+        } else {
+          urlInput.placeholder = 'انسخ وألصق روابط يوتيوب، ساوند كلاود، سبوتيفاي، أو أبل ميوزك...';
+        }
+      }
+    });
+  });
+}
+
+// 2. Retry Queue & Modal Handlers
+let autoRetryCount = 0;
+let lastAutoRetryTime = 0;
+
+function checkAutoRetryAtEnd() {
+  if (!autoRetryFailedToggle || !autoRetryFailedToggle.checked) return;
+  const now = Date.now();
+  if (now - lastAutoRetryTime < 5000) return;
+  if (stats.in_progress === 0 && stats.failed > 0 && autoRetryCount < 2) {
+    autoRetryCount++;
+    lastAutoRetryTime = now;
+    fetch('/api/queue/retry-failed', { method: 'POST' }).then(() => {
+      playUiSound('pop');
+    }).catch(() => {});
+  }
+}
+
+if (btnRetryFailed) {
+  btnRetryFailed.addEventListener('click', async () => {
+    playUiSound('pop');
+    try {
+      const res = await fetch('/api/queue/retry-failed', { method: 'POST' });
+      const data = await res.json();
+      if (data.retried_count > 0) {
+        triggerConfetti();
+      }
+    } catch (e) {}
+  });
+}
+
+window.openRetryModal = function(itemId, title) {
+  playUiSound('pop');
+  if (retryItemId) retryItemId.value = itemId;
+  if (retryTrackTitleText) retryTrackTitleText.textContent = title ? `المقطع: ${title}` : 'اختر صيغة أو جودة بديلة للتحميل:';
+  if (retryModalOverlay) retryModalOverlay.classList.remove('hidden');
+};
+
+if (btnCloseRetryModal) btnCloseRetryModal.addEventListener('click', () => retryModalOverlay.classList.add('hidden'));
+if (btnCancelRetryModal) btnCancelRetryModal.addEventListener('click', () => retryModalOverlay.classList.add('hidden'));
+
+if (btnConfirmRetrySingle) {
+  btnConfirmRetrySingle.addEventListener('click', async () => {
+    const itemId = retryItemId ? retryItemId.value : '';
+    if (!itemId) return;
+    const newFormat = retryFormatSelect ? retryFormatSelect.value : 'mp3';
+    const newQuality = retryQualitySelect ? retryQualitySelect.value : '192';
+
+    playUiSound('pop');
+    btnConfirmRetrySingle.disabled = true;
+    try {
+      const res = await fetch('/api/queue/retry-single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          item_id: itemId,
+          new_format: newFormat,
+          new_quality: newQuality
+        })
+      });
+      if (res.ok) {
+        if (retryModalOverlay) retryModalOverlay.classList.add('hidden');
+      }
+    } catch (e) {} finally {
+      btnConfirmRetrySingle.disabled = false;
+    }
+  });
+}
+
+// 3. Smart Clipboard Auto-Monitor
+let lastCopiedUrl = '';
+let clipboardPollTimer = null;
+
+function initClipboardMonitor() {
+  try {
+    const saved = localStorage.getItem('mazekty_clipboard_monitor');
+    if (saved !== null && clipboardMonitorToggle) {
+      clipboardMonitorToggle.checked = (saved === 'true');
+    }
+  } catch (e) {}
+
+  if (clipboardMonitorToggle) {
+    clipboardMonitorToggle.addEventListener('change', () => {
+      try {
+        localStorage.setItem('mazekty_clipboard_monitor', clipboardMonitorToggle.checked);
+      } catch (e) {}
+    });
+  }
+
+  clipboardPollTimer = setInterval(async () => {
+    if (!clipboardMonitorToggle || !clipboardMonitorToggle.checked) return;
+    if (!document.hasFocus()) return;
+    try {
+      const text = await navigator.clipboard.readText();
+      if (!text || typeof text !== 'string') return;
+      const trimmed = text.trim();
+      if (trimmed === lastCopiedUrl) return;
+
+      const isMediaUrl = /https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be|soundcloud\.com|open\.spotify\.com|music\.apple\.com)\S+/i.test(trimmed);
+      if (isMediaUrl) {
+        lastCopiedUrl = trimmed;
+        if (clipboardToastUrl) clipboardToastUrl.textContent = trimmed.length > 55 ? trimmed.substring(0, 52) + '...' : trimmed;
+        if (clipboardToast) {
+          clipboardToast.classList.remove('hidden');
+          playUiSound('pop');
+        }
+      }
+    } catch (e) {}
+  }, 2500);
+}
+
+if (btnClipboardDismiss) {
+  btnClipboardDismiss.addEventListener('click', () => {
+    if (clipboardToast) clipboardToast.classList.add('hidden');
+  });
+}
+
+if (btnClipboardAdd) {
+  btnClipboardAdd.addEventListener('click', () => {
+    if (clipboardToast) clipboardToast.classList.add('hidden');
+    if (lastCopiedUrl && urlInput) {
+      urlInput.value = lastCopiedUrl;
+      switchView('downloader');
+      startDownloadProcess();
+    }
+  });
+}
+
+// 4. Synced Karaoke Lyrics (.lrc)
+let parsedLyrics = [];
+let currentLyricsRaw = '';
+
+if (btnPlayerLyrics) {
+  btnPlayerLyrics.addEventListener('click', () => {
+    playUiSound('pop');
+    if (!lyricsDrawer) return;
+    const isHidden = lyricsDrawer.classList.contains('hidden');
+    if (isHidden) {
+      lyricsDrawer.classList.remove('hidden');
+      loadLyricsForCurrentSong();
+    } else {
+      lyricsDrawer.classList.add('hidden');
+    }
+  });
+}
+
+if (btnCloseLyrics) {
+  btnCloseLyrics.addEventListener('click', () => {
+    if (lyricsDrawer) lyricsDrawer.classList.add('hidden');
+  });
+}
+
+async function loadLyricsForCurrentSong() {
+  if (!currentlyPlayingFile || !lyricsContainer) return;
+  const cleanTitle = currentlyPlayingFile.replace(/\.[a-zA-Z0-9]+$/, '').replace(/\[[^\]]*\]/g, '').replace(/\([^)]*\)/g, '').trim();
+
+  if (lyricsTrackTitle) lyricsTrackTitle.textContent = cleanTitle;
+  if (lyricsArtistName) lyricsArtistName.textContent = i18n[currentLang].lyrics_loading || 'جاري جلب الكلمات...';
+  lyricsContainer.innerHTML = `<div class="lyrics-loading">${i18n[currentLang].lyrics_loading || 'جاري جلب الكلمات...'}</div>`;
+
+  try {
+    const res = await fetch(`/api/lyrics?title=${encodeURIComponent(cleanTitle)}`);
+    const data = await res.json();
+    if (data.success && data.lyrics) {
+      currentLyricsRaw = data.lyrics;
+      if (lyricsArtistName) lyricsArtistName.textContent = data.synced ? `✓ ${i18n[currentLang].lyrics_synced || 'متزامن كاريوكي'}` : (i18n[currentLang].lyrics_plain || 'كلمات نصية');
+      renderLyrics(data.lyrics, data.synced);
+    } else {
+      currentLyricsRaw = '';
+      if (lyricsArtistName) lyricsArtistName.textContent = '-';
+      lyricsContainer.innerHTML = `<div class="lyrics-empty">${i18n[currentLang].lyrics_not_found || 'لم يتم العثور على كلمات متزامنة لهذا التراك.'}</div>`;
+    }
+  } catch (e) {
+    lyricsContainer.innerHTML = `<div class="lyrics-empty">خطأ أثناء جلب الكلمات.</div>`;
+  }
+}
+
+function parseLrc(lrcText) {
+  const lines = lrcText.split('\n');
+  const result = [];
+  const timeRegex = /\[(\d{2}):(\d{2})(?:\.(\d{1,3}))?\]/g;
+
+  lines.forEach(line => {
+    const matches = [...line.matchAll(timeRegex)];
+    const text = line.replace(timeRegex, '').trim();
+    if (matches.length > 0 && text) {
+      matches.forEach(m => {
+        const min = parseInt(m[1], 10);
+        const sec = parseInt(m[2], 10);
+        const ms = m[3] ? parseInt(m[3].padEnd(3, '0').slice(0, 3), 10) : 0;
+        const totalSec = min * 60 + sec + ms / 1000;
+        result.push({ time: totalSec, text });
+      });
+    }
+  });
+
+  return result.sort((a, b) => a.time - b.time);
+}
+
+function renderLyrics(lyricsText, isSynced) {
+  if (!lyricsContainer) return;
+  lyricsContainer.innerHTML = '';
+
+  if (isSynced) {
+    parsedLyrics = parseLrc(lyricsText);
+    parsedLyrics.forEach((item, idx) => {
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'lyrics-line';
+      lineDiv.dataset.idx = idx;
+      lineDiv.dataset.time = item.time;
+      lineDiv.textContent = item.text;
+      lineDiv.addEventListener('click', () => {
+        if (globalAudioPlayer) {
+          globalAudioPlayer.currentTime = item.time;
+        }
+      });
+      lyricsContainer.appendChild(lineDiv);
+    });
+  } else {
+    parsedLyrics = [];
+    const p = document.createElement('div');
+    p.style.whiteSpace = 'pre-wrap';
+    p.style.lineHeight = '1.8';
+    p.style.fontSize = '0.95rem';
+    p.style.color = 'var(--text-secondary)';
+    p.textContent = lyricsText;
+    lyricsContainer.appendChild(p);
+  }
+}
+
+// Sync lyrics scroll with audio playback
+if (globalAudioPlayer) {
+  globalAudioPlayer.addEventListener('timeupdate', () => {
+    if (!parsedLyrics || parsedLyrics.length === 0 || !lyricsDrawer || lyricsDrawer.classList.contains('hidden')) return;
+    const curTime = globalAudioPlayer.currentTime;
+    let activeIdx = -1;
+    for (let i = 0; i < parsedLyrics.length; i++) {
+      if (curTime >= parsedLyrics[i].time) {
+        activeIdx = i;
+      } else {
+        break;
+      }
+    }
+
+    const allLines = lyricsContainer.querySelectorAll('.lyrics-line');
+    allLines.forEach((l, idx) => {
+      if (idx === activeIdx) {
+        if (!l.classList.contains('active')) {
+          l.classList.add('active');
+          l.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      } else {
+        l.classList.remove('active');
+      }
+    });
+  });
+}
+
+// Save .lrc file button
+if (btnSaveLrc) {
+  btnSaveLrc.addEventListener('click', async () => {
+    if (!currentlyPlayingFile || !currentLyricsRaw) return;
+    playUiSound('pop');
+    try {
+      const res = await fetch('/api/lyrics/save-lrc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: currentlyPlayingFile,
+          lyrics_content: currentLyricsRaw,
+          folder: topFolderLabel ? topFolderLabel.title : null
+        })
+      });
+      if (res.ok) {
+        playUiSound('success');
+        alert(i18n[currentLang].lrc_saved || 'تم حفظ ملف الكلمات بنجاح!');
+      }
+    } catch (e) {}
+  });
+}
+
+// 5. Live Neon Spectrum Visualizer
+let visAudioCtx = null;
+let analyserNode = null;
+let audioSourceNode = null;
+let visualizerAnimId = null;
+
+function initAudioContext() {
+  if (analyserNode) return;
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    visAudioCtx = new AudioContextClass();
+    analyserNode = visAudioCtx.createAnalyser();
+    analyserNode.fftSize = 128;
+
+    if (globalAudioPlayer) {
+      audioSourceNode = visAudioCtx.createMediaElementSource(globalAudioPlayer);
+      audioSourceNode.connect(analyserNode);
+      analyserNode.connect(visAudioCtx.destination);
+    }
+  } catch (e) {
+    console.warn('[Visualizer] Web Audio init error:', e);
+  }
+}
+
+function startVisualizerLoop() {
+  if (!spectrumCanvas || !analyserNode) return;
+  const ctx = spectrumCanvas.getContext('2d');
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function renderFrame() {
+    visualizerAnimId = requestAnimationFrame(renderFrame);
+    analyserNode.getByteFrequencyData(dataArray);
+
+    ctx.clearRect(0, 0, spectrumCanvas.width, spectrumCanvas.height);
+
+    const mode = visModeSelect ? visModeSelect.value : 'bars';
+    const width = spectrumCanvas.width;
+    const height = spectrumCanvas.height;
+
+    if (mode === 'bars') {
+      const barWidth = (width / bufferLength) * 2.2;
+      let x = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const barHeight = (dataArray[i] / 255) * height * 0.85;
+
+        const grad = ctx.createLinearGradient(0, height - barHeight, 0, height);
+        grad.addColorStop(0, '#ec4899');
+        grad.addColorStop(0.5, '#8b5cf6');
+        grad.addColorStop(1, '#3b82f6');
+
+        ctx.fillStyle = grad;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = '#8b5cf6';
+        ctx.beginPath();
+        if (ctx.roundRect) {
+          ctx.roundRect(x, height - barHeight, barWidth - 3, barHeight, [4, 4, 0, 0]);
+        } else {
+          ctx.rect(x, height - barHeight, barWidth - 3, barHeight);
+        }
+        ctx.fill();
+        x += barWidth;
+      }
+    } else if (mode === 'wave') {
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#06b6d4';
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = '#06b6d4';
+      ctx.beginPath();
+
+      const sliceWidth = width / bufferLength;
+      let x = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        const v = dataArray[i] / 128.0;
+        const y = (v * height) / 2;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+        x += sliceWidth;
+      }
+      ctx.stroke();
+    } else if (mode === 'circle') {
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = 50;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      for (let i = 0; i < bufferLength; i++) {
+        const rad = (i / bufferLength) * 2 * Math.PI;
+        const barLen = (dataArray[i] / 255) * 60;
+        const x1 = Math.cos(rad) * radius;
+        const y1 = Math.sin(rad) * radius;
+        const x2 = Math.cos(rad) * (radius + barLen);
+        const y2 = Math.sin(rad) * (radius + barLen);
+
+        ctx.strokeStyle = `hsl(${(i * 5) % 360}, 90%, 65%)`;
+        ctx.shadowBlur = 8;
+        ctx.shadowColor = `hsl(${(i * 5) % 360}, 90%, 65%)`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+  }
+
+  renderFrame();
+}
+
+if (btnPlayerVisualizer) {
+  btnPlayerVisualizer.addEventListener('click', () => {
+    playUiSound('pop');
+    initAudioContext();
+    if (visAudioCtx && visAudioCtx.state === 'suspended') {
+      visAudioCtx.resume();
+    }
+    if (visualizerOverlay) {
+      visualizerOverlay.classList.remove('hidden');
+      startVisualizerLoop();
+    }
+  });
+}
+
+if (btnCloseVisualizer) {
+  btnCloseVisualizer.addEventListener('click', () => {
+    if (visualizerAnimId) cancelAnimationFrame(visualizerAnimId);
+    if (visualizerOverlay) visualizerOverlay.classList.add('hidden');
+  });
+}
+
+// 6. Smart Sleep Timer
+let sleepTimerId = null;
+let sleepEndTime = null;
+
+if (btnPlayerSleepTimer) {
+  btnPlayerSleepTimer.addEventListener('click', () => {
+    playUiSound('pop');
+    if (sleepTimerModal) sleepTimerModal.classList.remove('hidden');
+  });
+}
+
+if (btnCloseSleepTimer) {
+  btnCloseSleepTimer.addEventListener('click', () => {
+    if (sleepTimerModal) sleepTimerModal.classList.add('hidden');
+  });
+}
+
+if (sleepOptionBtns && sleepOptionBtns.length > 0) {
+  sleepOptionBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      playUiSound('pop');
+      const mins = parseInt(btn.dataset.minutes, 10);
+      if (mins === 0) {
+        if (sleepTimerId) clearInterval(sleepTimerId);
+        sleepTimerId = null;
+        sleepEndTime = null;
+        if (globalAudioPlayer) globalAudioPlayer.volume = 1;
+        if (sleepTimerStatus) sleepTimerStatus.textContent = i18n[currentLang].sleep_timer_off || 'تم إيقاف مؤقت النوم';
+        if (btnPlayerSleepTimer) btnPlayerSleepTimer.style.color = '';
+      } else {
+        if (sleepTimerId) clearInterval(sleepTimerId);
+        sleepEndTime = Date.now() + mins * 60 * 1000;
+        if (btnPlayerSleepTimer) btnPlayerSleepTimer.style.color = 'var(--primary)';
+
+        sleepTimerId = setInterval(() => {
+          const remaining = sleepEndTime - Date.now();
+          if (remaining <= 0) {
+            clearInterval(sleepTimerId);
+            sleepTimerId = null;
+            if (globalAudioPlayer) {
+              globalAudioPlayer.pause();
+              globalAudioPlayer.volume = 1;
+            }
+            if (sleepTimerStatus) sleepTimerStatus.textContent = i18n[currentLang].sleep_timer_off || 'تم الإيقاف تلقائياً';
+            if (btnPlayerSleepTimer) btnPlayerSleepTimer.style.color = '';
+          } else {
+            if (remaining < 60000 && globalAudioPlayer) {
+              globalAudioPlayer.volume = Math.max(0.05, remaining / 60000);
+            }
+            const m = Math.floor(remaining / 60000);
+            const s = Math.floor((remaining % 60000) / 1000);
+            if (sleepTimerStatus) {
+              sleepTimerStatus.textContent = `⏳ متبقي: ${m}:${s < 10 ? '0' : ''}${s}`;
+            }
+          }
+        }, 1000);
+
+        if (sleepTimerStatus) {
+          sleepTimerStatus.textContent = `✓ تم ضبط المؤقت على ${mins} دقيقة`;
+        }
+      }
+    });
+  });
+}
+
+// 7. Mini Floating Player / PiP Widget
+if (btnPlayerMini) {
+  btnPlayerMini.addEventListener('click', () => {
+    playUiSound('pop');
+    if (playerWidget) {
+      playerWidget.classList.toggle('mini-player-mode');
+    }
+  });
+}
+
+// 8. Pro Studio Tools 11-14 Handlers
+// Tool 11: AI Stems
+if (btnDoStems) {
+  btnDoStems.addEventListener('click', async () => {
+    const filename = stemsFileSelect ? stemsFileSelect.value : '';
+    if (!filename) return;
+
+    playUiSound('pop');
+    btnDoStems.disabled = true;
+    const origHtml = btnDoStems.innerHTML;
+    btnDoStems.innerHTML = `<span>⏳</span> <span>جاري فصل المسارات الصوتية...</span>`;
+    if (stemsFeedback) {
+      stemsFeedback.className = 'studio-feedback-badge loading';
+      stemsFeedback.textContent = 'جاري تحليل الترددات وفصل الغناء والموسيقى والبيس والإيقاع...';
+      stemsFeedback.classList.remove('hidden');
+    }
+
+    try {
+      const res = await fetch('/api/studio/stems', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: filename,
+          folder: topFolderLabel ? topFolderLabel.title : null
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        playUiSound('success');
+        triggerConfetti();
+        if (stemsFeedback) {
+          stemsFeedback.className = 'studio-feedback-badge success';
+          stemsFeedback.textContent = `✓ تم بنجاح! تم إنشاء مجلد Stems يضم 4 مسارات: Vocals, Music, Bass, Drums`;
+        }
+        fetchLibrary();
+      } else {
+        if (stemsFeedback) {
+          stemsFeedback.className = 'studio-feedback-badge error';
+          stemsFeedback.textContent = data.detail || 'حدث خطأ أثناء فصل المسارات';
+        }
+      }
+    } catch (e) {
+      if (stemsFeedback) {
+        stemsFeedback.className = 'studio-feedback-badge error';
+        stemsFeedback.textContent = 'تعذر الاتصال بالمحرك الصوتي';
+      }
+    } finally {
+      btnDoStems.disabled = false;
+      btnDoStems.innerHTML = origHtml;
+    }
+  });
+}
+
+// Tool 12: Audio Merger & DJ Crossfade
+if (crossfadeSlider && crossfadeValueLabel) {
+  crossfadeSlider.addEventListener('input', () => {
+    crossfadeValueLabel.textContent = `${parseFloat(crossfadeSlider.value).toFixed(1)}s`;
+  });
+}
+
+if (btnDoMerge) {
+  btnDoMerge.addEventListener('click', async () => {
+    const track1 = mergeFileSelect1 ? mergeFileSelect1.value : '';
+    const track2 = mergeFileSelect2 ? mergeFileSelect2.value : '';
+    if (!track1 || !track2) {
+      alert('الرجاء اختيار مقطعين صوتيين للدمج');
+      return;
+    }
+    const crossfadeSec = crossfadeSlider ? parseFloat(crossfadeSlider.value) : 4.0;
+
+    playUiSound('pop');
+    btnDoMerge.disabled = true;
+    const origHtml = btnDoMerge.innerHTML;
+    btnDoMerge.innerHTML = `<span>⏳</span> <span>جاري معالجة ميكس الانتقال...</span>`;
+
+    try {
+      const res = await fetch('/api/studio/merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          track1: track1,
+          track2: track2,
+          crossfade_sec: crossfadeSec,
+          folder: topFolderLabel ? topFolderLabel.title : null
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        playUiSound('success');
+        triggerConfetti();
+        alert(`🎧 ${data.message || 'تم دمج المقطعين بنجاح!'}`);
+        fetchLibrary();
+      } else {
+        alert(data.detail || 'حدث خطأ أثناء الدمج');
+      }
+    } catch (e) {
+      alert('خطأ في معالجة الدمج');
+    } finally {
+      btnDoMerge.disabled = false;
+      btnDoMerge.innerHTML = origHtml;
+    }
+  });
+}
+
+// Tool 13: Audio De-Noise
+if (btnDoDenoise) {
+  btnDoDenoise.addEventListener('click', async () => {
+    const filename = denoiseFileSelect ? denoiseFileSelect.value : '';
+    if (!filename) return;
+
+    playUiSound('pop');
+    btnDoDenoise.disabled = true;
+    const origHtml = btnDoDenoise.innerHTML;
+    btnDoDenoise.innerHTML = `<span>⏳</span> <span>جاري تنقية الصوت والوشيش...</span>`;
+
+    try {
+      const res = await fetch('/api/studio/denoise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: filename,
+          noise_reduction: 12,
+          folder: topFolderLabel ? topFolderLabel.title : null
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        playUiSound('success');
+        triggerConfetti();
+        alert(`✨ ${data.message || 'تمت تنقية الملف الصوتي وحفظ النسخة الماستر!'}`);
+        fetchLibrary();
+      } else {
+        alert(data.detail || 'حدث خطأ أثناء تنقية الصوت');
+      }
+    } catch (e) {
+      alert('خطأ أثناء تنقية الصوت');
+    } finally {
+      btnDoDenoise.disabled = false;
+      btnDoDenoise.innerHTML = origHtml;
+    }
+  });
+}
+
+// Tool 14: Shazam-like Audio Identifier
+if (btnDoIdentify) {
+  btnDoIdentify.addEventListener('click', async () => {
+    const filename = identifyFileSelect ? identifyFileSelect.value : '';
+    if (!filename) return;
+
+    playUiSound('pop');
+    btnDoIdentify.disabled = true;
+    const origHtml = btnDoIdentify.innerHTML;
+    btnDoIdentify.innerHTML = `<span>⏳</span> <span>جاري فحص التراك والبحث السحابي...</span>`;
+    if (identifyResultBox) {
+      identifyResultBox.classList.remove('hidden');
+      identifyResultBox.innerHTML = `<div style="text-align:center; padding:12px; color:var(--text-secondary);">جاري البحث والتعرف على الأغنية...</div>`;
+    }
+
+    try {
+      const res = await fetch('/api/studio/identify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: filename,
+          folder: topFolderLabel ? topFolderLabel.title : null
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.match) {
+        const m = data.match;
+        playUiSound('success');
+        triggerConfetti();
+
+        if (identifyResultBox) {
+          identifyResultBox.innerHTML = `
+            <div class="identify-card">
+              ${m.artwork_url ? `<img src="${m.artwork_url}" class="identify-art" alt="Cover" />` : ''}
+              <div class="identify-meta">
+                <div class="identify-track-name">${escapeHtml(m.track_name || '')}</div>
+                <div class="identify-artist">${escapeHtml(m.artist_name || '')}</div>
+                <div class="identify-album">${escapeHtml(m.album_name || '')} (${escapeHtml(m.release_year || '')})</div>
+              </div>
+              <button type="button" class="btn-action btn-download" style="margin-inline-start:auto; padding:8px 14px; font-size:0.82rem;" id="btnApplyIdentified">
+                💾 حفظ التاجات للملف
+              </button>
+            </div>
+          `;
+
+          const btnApply = document.getElementById('btnApplyIdentified');
+          if (btnApply) {
+            btnApply.addEventListener('click', async () => {
+              playUiSound('pop');
+              btnApply.disabled = true;
+              btnApply.textContent = '⏳ جاري الحفظ...';
+              try {
+                const tagRes = await fetch('/api/library/tags', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    filename: filename,
+                    title: m.track_name || '',
+                    artist: m.artist_name || '',
+                    album: m.album_name || '',
+                    year: m.release_year || '',
+                    genre: m.genre || '',
+                    folder: topFolderLabel ? topFolderLabel.title : null
+                  })
+                });
+                if (tagRes.ok) {
+                  playUiSound('success');
+                  btnApply.textContent = '✓ تم الحفظ بنجاح!';
+                  fetchLibrary();
+                }
+              } catch (e) {}
+            });
+          }
+        }
+      } else {
+        if (identifyResultBox) {
+          identifyResultBox.innerHTML = `<div style="text-align:center; padding:12px; color:var(--danger);">لم يتم العثور على تطابق لهذا الملف.</div>`;
+        }
+      }
+    } catch (e) {
+      if (identifyResultBox) {
+        identifyResultBox.innerHTML = `<div style="text-align:center; padding:12px; color:var(--danger);">خطأ أثناء التعرف على التراك.</div>`;
+      }
+    } finally {
+      btnDoIdentify.disabled = false;
+      btnDoIdentify.innerHTML = origHtml;
+    }
+  });
+}
+
+// Auto-restore clipboard monitor setting & initialize theme from localStorage
+initClipboardMonitor();
+applyTheme();
 
 // Startup
 setupWebSocket();

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/AppIcon.png">
   <style>
     :root {
       --bg: #090d16;
@@ -241,10 +242,10 @@
       <span>▶️</span>
       <span>تشغيل البلاي ليست</span>
     </button>
-    <a href="/api/export-m3u" download="Mazekty_Playlist.m3u" class="btn-mobile btn-export-m3u" id="btnExportM3u">
+    <button type="button" class="btn-mobile btn-export-m3u" id="btnExportM3u" onclick="exportM3u()">
       <span>📜</span>
       <span>تصدير M3U لـ VLC</span>
-    </a>
+    </button>
   </div>
 
   <div class="tracks-list" id="tracksList"></div>
@@ -264,6 +265,22 @@
     const audioElement = document.getElementById('audioElement');
     const nowPlayingText = document.getElementById('nowPlayingText');
     const btnPlayAll = document.getElementById('btnPlayAll');
+
+    async function exportM3u() {
+      try {
+        const res = await fetch('/api/export-m3u', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.status === 'success') {
+          alert('تم تصدير قائمة التشغيل M3U بنجاح!');
+        }
+      } catch (e) {
+        alert('تعذر تصدير قائمة التشغيل');
+      }
+    }
 
     async function loadTracks() {
       try {

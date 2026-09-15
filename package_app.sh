@@ -77,6 +77,13 @@ mkdir -p "${APP_DIR}/Contents/Resources/app/downloads"
 echo "Bundling Python runtime..."
 cp -R venv "${APP_DIR}/Contents/Resources/app/venv"
 
+# Optimize bundle size by removing cache and tests
+echo "Optimizing bundle size..."
+find "${APP_DIR}/Contents/Resources/app" -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+find "${APP_DIR}/Contents/Resources/app" -type f -name "*.pyc" -delete 2>/dev/null || true
+find "${APP_DIR}/Contents/Resources/app" -type f -name "*.pyo" -delete 2>/dev/null || true
+find "${APP_DIR}/Contents/Resources/app/venv" -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true
+
 # 5. Create launcher script
 echo "Creating launcher executable..."
 cat << 'EOF' > "${APP_DIR}/Contents/MacOS/Mazekty"

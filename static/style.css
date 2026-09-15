@@ -32,36 +32,44 @@
   --shadow-player: 0 -10px 30px rgba(0, 0, 0, 0.5);
 }
 
-[data-accent="blue"] {
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-glow: rgba(59, 130, 246, 0.4);
-  --primary-grad: linear-gradient(135deg, #2563eb, #3b82f6, #06b6d4);
-  --border-focus: #60a5fa;
+:root, [data-accent="violet"], html[data-accent="violet"] {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-glow: rgba(99, 102, 241, 0.45);
+  --primary-grad: linear-gradient(135deg, #4f46e5, #7c3aed, #ec4899);
+  --border-focus: #818cf8;
 }
 
-[data-accent="emerald"] {
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.4);
-  --primary-grad: linear-gradient(135deg, #059669, #10b981, #14b8a6);
-  --border-focus: #34d399;
+[data-accent="blue"], html[data-accent="blue"] {
+  --primary: #3b82f6 !important;
+  --primary-hover: #2563eb !important;
+  --primary-glow: rgba(59, 130, 246, 0.45) !important;
+  --primary-grad: linear-gradient(135deg, #1d4ed8, #3b82f6, #06b6d4) !important;
+  --border-focus: #60a5fa !important;
 }
 
-[data-accent="rose"] {
-  --primary: #f43f5e;
-  --primary-hover: #e11d48;
-  --primary-glow: rgba(244, 63, 94, 0.4);
-  --primary-grad: linear-gradient(135deg, #e11d48, #f43f5e, #ec4899);
-  --border-focus: #fb7185;
+[data-accent="emerald"], html[data-accent="emerald"] {
+  --primary: #10b981 !important;
+  --primary-hover: #059669 !important;
+  --primary-glow: rgba(16, 185, 129, 0.45) !important;
+  --primary-grad: linear-gradient(135deg, #047857, #10b981, #14b8a6) !important;
+  --border-focus: #34d399 !important;
 }
 
-[data-accent="amber"] {
-  --primary: #f59e0b;
-  --primary-hover: #d97706;
-  --primary-glow: rgba(245, 158, 11, 0.4);
-  --primary-grad: linear-gradient(135deg, #d97706, #f59e0b, #eab308);
-  --border-focus: #fbbf24;
+[data-accent="rose"], html[data-accent="rose"] {
+  --primary: #f43f5e !important;
+  --primary-hover: #e11d48 !important;
+  --primary-glow: rgba(244, 63, 94, 0.45) !important;
+  --primary-grad: linear-gradient(135deg, #be123c, #f43f5e, #fb7185) !important;
+  --border-focus: #fb7185 !important;
+}
+
+[data-accent="amber"], html[data-accent="amber"] {
+  --primary: #f59e0b !important;
+  --primary-hover: #d97706 !important;
+  --primary-glow: rgba(245, 158, 11, 0.45) !important;
+  --primary-grad: linear-gradient(135deg, #b45309, #f59e0b, #fbbf24) !important;
+  --border-focus: #fbbf24 !important;
 }
 
 [data-theme="oled"] {
@@ -1408,33 +1416,7 @@ html[dir="ltr"] .file-item:hover {
   --text-muted: #94a3b8;
 }
 
-[data-accent="blue"] {
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-glow: rgba(59, 130, 246, 0.35);
-  --border-focus: #60a5fa;
-}
-
-[data-accent="emerald"] {
-  --primary: #10b981;
-  --primary-hover: #059669;
-  --primary-glow: rgba(16, 185, 129, 0.35);
-  --border-focus: #34d399;
-}
-
-[data-accent="rose"] {
-  --primary: #f43f5e;
-  --primary-hover: #e11d48;
-  --primary-glow: rgba(244, 63, 94, 0.35);
-  --border-focus: #fb7185;
-}
-
-[data-accent="amber"] {
-  --primary: #f59e0b;
-  --primary-hover: #d97706;
-  --primary-glow: rgba(245, 158, 11, 0.35);
-  --border-focus: #fbbf24;
-}
+/* Duplicate accents removed for theme support */
 
 /* ========================================================
    ENHANCED GRID & CONTROLS
@@ -2926,3 +2908,238 @@ html[dir="ltr"] .clipboard-toast {
 }
 
 
+
+/* ==========================================================================
+   MULTI-STAGE PROGRESS BARS & PREVIEW LIST CONSTRAINTS (Mazekty Pro v2.5)
+   ========================================================================== */
+
+/* Playlist & Channel Preview List Constraints (Shows ~20 items with custom scrollbar) */
+.preview-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 540px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-inline-end: 8px;
+  margin-top: 10px;
+}
+
+.preview-list::-webkit-scrollbar,
+.tasks-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.preview-list::-webkit-scrollbar-track,
+.tasks-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 4px;
+}
+
+.preview-list::-webkit-scrollbar-thumb,
+.tasks-list::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+  box-shadow: 0 0 6px var(--primary-glow);
+}
+
+.preview-list::-webkit-scrollbar-thumb:hover,
+.tasks-list::-webkit-scrollbar-thumb:hover {
+  background: #a855f7;
+}
+
+/* Tasks Queue Container Constraint */
+.tasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 580px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  padding-inline-end: 8px;
+}
+
+/* Multi-Stage Task Card Progress Bars */
+.progress-bar-wrap {
+  width: 100%;
+  height: 9px !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-radius: var(--radius-full) !important;
+  overflow: hidden !important;
+  position: relative !important;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5) !important;
+  margin: 6px 0 !important;
+}
+
+.progress-bar-fill {
+  height: 100% !important;
+  width: 0%;
+  background: var(--primary-grad) !important;
+  border-radius: var(--radius-full) !important;
+  transition: width 0.25s ease !important;
+  position: relative !important;
+  box-shadow: 0 0 10px var(--primary-glow) !important;
+}
+
+/* Stage: Queued Shimmer */
+.task-card.status-queued .progress-bar-fill {
+  width: 100% !important;
+  background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.2), rgba(255,255,255,0.05)) !important;
+  background-size: 200% 100% !important;
+  animation: progressPulseIndeterminate 2s infinite linear !important;
+  box-shadow: none !important;
+}
+
+/* Stage: Indeterminate / Long Stream Loading */
+.progress-bar-fill.indeterminate {
+  width: 100% !important;
+  background: linear-gradient(90deg, #6366f1, #ec4899, #6366f1) !important;
+  background-size: 200% 100% !important;
+  animation: progressPulseIndeterminate 1.5s infinite linear !important;
+}
+
+@keyframes progressPulseIndeterminate {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Stage: Converting (FFmpeg Re-encoding for 1-2h audio) */
+.task-card.status-converting .progress-bar-fill,
+.progress-bar-fill.stage-converting {
+  width: 100% !important;
+  background: repeating-linear-gradient(
+    45deg,
+    #f59e0b,
+    #f59e0b 12px,
+    #d97706 12px,
+    #d97706 24px
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: stripeAnimation 1.2s linear infinite !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.7) !important;
+}
+
+/* Stage: Processing (Artwork & Metadata Embedding) */
+.task-card.status-processing .progress-bar-fill,
+.progress-bar-fill.stage-processing {
+  width: 100% !important;
+  background: repeating-linear-gradient(
+    45deg,
+    #10b981,
+    #10b981 12px,
+    #059669 12px,
+    #059669 24px
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: stripeAnimation 1.2s linear infinite !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.7) !important;
+}
+
+@keyframes stripeAnimation {
+  0% { background-position: 0 0; }
+  100% { background-position: 48px 0; }
+}
+
+/* Stage: Completed */
+.task-card.status-completed .progress-bar-fill {
+  width: 100% !important;
+  background: linear-gradient(90deg, #10b981, #34d399) !important;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6) !important;
+}
+
+/* Stage: Skipped */
+.task-card.status-skipped .progress-bar-fill {
+  width: 100% !important;
+  background: #38bdf8 !important;
+}
+
+/* Stage: Error */
+.task-card.status-error .progress-bar-fill {
+  width: 100% !important;
+  background: #ef4444 !important;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.6) !important;
+}
+
+/* Vector SVG Flags Styling */
+.svg-flag-icon {
+  width: 22px;
+  height: 16px;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+/* Custom Language Dropdown */
+.custom-lang-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.custom-lang-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.custom-lang-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary);
+}
+
+.custom-lang-name {
+  flex: 1;
+  text-align: start;
+}
+
+.custom-lang-arrow {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+.custom-lang-menu {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #0f172a;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+  z-index: 1000;
+  overflow: hidden;
+  display: none;
+}
+
+.custom-lang-menu.open {
+  display: block;
+}
+
+.custom-lang-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+}
+
+.custom-lang-item:hover,
+.custom-lang-item.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: #fff;
+}

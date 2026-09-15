@@ -63,25 +63,30 @@ def get_config_path() -> str:
     return os.path.join(get_user_data_dir(), "config.json")
 
 def get_default_download_dir(fallback_base: Optional[str] = None) -> str:
-    """Returns sensible default download folder per OS."""
+    """Returns sensible default download folder per OS, isolated from program files."""
+    user_home = os.path.expanduser("~")
     if CURRENT_OS == "Darwin":
-        path = os.path.expanduser("~/Downloads/Mazekty")
+        music_dir = os.path.join(user_home, "Music", "Mazekty")
+        path = music_dir if os.path.exists(os.path.dirname(music_dir)) else os.path.join(user_home, "Downloads", "Mazekty")
     elif CURRENT_OS == "Windows":
-        path = os.path.expanduser("~\\Downloads\\Mazekty")
+        # Dedicated user Music folder (clean, isolated from program files)
+        music_dir = os.path.join(user_home, "Music", "Mazekty")
+        path = music_dir if os.path.exists(os.path.dirname(music_dir)) else os.path.join(user_home, "Downloads", "Mazekty")
     elif CURRENT_OS == "Linux":
-        xdg_download = os.environ.get("XDG_DOWNLOAD_DIR")
-        if xdg_download and os.path.exists(xdg_download):
-            path = os.path.join(xdg_download, "Mazekty")
+        xdg_music = os.environ.get("XDG_MUSIC_DIR")
+        if xdg_music and os.path.exists(xdg_music):
+            path = os.path.join(xdg_music, "Mazekty")
         else:
-            path = os.path.expanduser("~/Downloads/Mazekty")
+            path = os.path.join(user_home, "Music", "Mazekty")
     else:
-        if fallback_base:
-            path = os.path.join(fallback_base, "downloads")
-        else:
-            path = os.path.expanduser("~/Downloads/Mazekty")
+        path = os.path.join(user_home, "Music", "Mazekty")
             
-    os.makedirs(path, exist_ok=True)
-    return path
+    try:
+        os.makedirs(path, exist_ok=True)
+    except Exception:
+        path = os.path.join(user_home, "Downloads", "Mazekty")
+        os.makedirs(path, exist_ok=True)
+    return os.path.abspath(path)
 
 def find_ffmpeg() -> str:
     """Locates ffmpeg binary across common paths for all platforms."""

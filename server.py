@@ -67,25 +67,46 @@ if not os.path.exists(STATIC_DIR) and getattr(sys, 'frozen', False):
 
 CONFIG_FILE = get_config_path()
 
-def load_config() -> Dict[str, Any]:
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except Exception:
-            pass
+def sanitize_download_folder(folder_path: Optional[str]) -> str:
     default_dir = get_default_download_dir(BASE_DIR)
-    return {
+    if not folder_path or not str(folder_path).strip():
+        return default_dir
+    abs_path = os.path.abspath(str(folder_path).strip())
+    # Prevent download folder from ever pointing into program files / app distribution
+    bad_markers = ["_internal", "site-packages", "Mazekty.exe"]
+    if any(m.lower() in abs_path.lower() for m in bad_markers) or os.path.isfile(os.path.join(abs_path, "Mazekty.exe")):
+        return default_dir
+    try:
+        os.makedirs(abs_path, exist_ok=True)
+    except Exception:
+        return default_dir
+    return abs_path
+
+def load_config() -> Dict[str, Any]:
+    default_dir = get_default_download_dir(BASE_DIR)
+    cfg = {
         "download_folder": default_dir,
-        "language": "en",
+        "language": "ar",
         "is_pro": True,
         "theme_accent": "violet",
         "theme_mode": "dark",
         "os_name": get_os_name()
     }
+    if os.path.exists(CONFIG_FILE):
+        try:
+            with open(CONFIG_FILE, "r", encoding="utf-8") as f:
+                loaded = json.load(f)
+                if isinstance(loaded, dict):
+                    cfg.update(loaded)
+        except Exception:
+            pass
+    cfg["download_folder"] = sanitize_download_folder(cfg.get("download_folder"))
+    return cfg
 
 def save_config(updates: Dict[str, Any]):
     cfg = load_config()
+    if "download_folder" in updates:
+        updates["download_folder"] = sanitize_download_folder(updates["download_folder"])
     cfg.update(updates)
     try:
         with open(CONFIG_FILE, "w", encoding="utf-8") as f:
@@ -235,8 +256,13 @@ async def queue_worker():
             status = d.get('status')
             if status == 'downloading':
                 downloaded = d.get('downloaded_bytes', 0)
-                total = d.get('total_bytes') or d.get('total_bytes_estimate') or 1
-                percent = round((downloaded / total) * 100, 1) if total > 0 else 0
+                total = d.get('total_bytes') or d.get('total_bytes_estimate') or 0
+                if total and total > 0:
+                    percent = round((downloaded / total) * 100, 1)
+                else:
+                    percent = -1  # Indeterminate stream or long fragmented video
+                downloaded_mb = round(downloaded / (1024 * 1024), 1)
+                total_mb = round(total / (1024 * 1024), 1) if total and total > 0 else 0
                 speed = d.get('_speed_str', '')
                 eta = d.get('_eta_str', '')
                 info_dict = d.get('info_dict', {})
@@ -248,6 +274,8 @@ async def queue_worker():
                             "event": "progress",
                             "item_id": item_id,
                             "percent": percent,
+                            "downloaded_mb": downloaded_mb,
+                            "total_mb": total_mb,
                             "speed": speed,
                             "eta": eta,
                             "title": title,
@@ -263,6 +291,7 @@ async def queue_worker():
                             "item_id": item_id,
                             "percent": 100,
                             "status": "converting",
+                            "stage_text": "جاري تحويل ومعالجة الصوت (FFmpeg)...",
                             "title": item["title"]
                         }),
                         main_event_loop
@@ -272,13 +301,15 @@ async def queue_worker():
             pp = d.get('postprocessor', '')
             status = d.get('status')
             if status == 'started':
+                stage_text = "دمج صورة الغلاف والبيانات..." if ("Thumbnail" in pp or "Metadata" in pp) else "معالجة وتحسين الصوت..."
                 if main_event_loop and main_event_loop.is_running():
                     asyncio.run_coroutine_threadsafe(
                         manager.broadcast({
                             "event": "progress",
                             "item_id": item_id,
                             "percent": 100,
-                            "status": f"processing: {pp}",
+                            "status": "processing",
+                            "stage_text": stage_text,
                             "title": item["title"]
                         }),
                         main_event_loop

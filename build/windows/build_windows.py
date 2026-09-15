@@ -99,10 +99,18 @@ def main():
     # Copy AppIcon.ico into root of distribution
     shutil.copy2(os.path.join(SCRIPT_DIR, "AppIcon.ico"), os.path.join(APP_DIST_DIR, "AppIcon.ico"))
 
-    # Ensure downloads folder exists in dist
-    os.makedirs(os.path.join(APP_DIST_DIR, "downloads"), exist_ok=True)
+    # Do not create downloads folder inside dist to prevent polluting user folder
+    dist_downloads = os.path.join(APP_DIST_DIR, "downloads")
+    if os.path.exists(dist_downloads):
+        shutil.rmtree(dist_downloads, ignore_errors=True)
 
-    # 4. Compile Inno Setup Script
+    # 4. Create Mazekty-Windows-Portable.zip
+    zip_output_base = os.path.join(SCRIPT_DIR, "Mazekty-Windows-Portable")
+    print(f"[*] Packaging {zip_output_base}.zip...")
+    shutil.make_archive(zip_output_base, 'zip', root_dir=DIST_DIR, base_dir=APP_NAME)
+    print(f"[OK] Created portable ZIP at: {zip_output_base}.zip")
+
+    # 5. Compile Inno Setup Script
     iscc = find_iscc()
     if not iscc:
         print("[!] Inno Setup Compiler (ISCC.exe) not found.")

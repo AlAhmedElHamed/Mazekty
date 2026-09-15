@@ -5,7 +5,7 @@ let reconnectTimer = null;
 let currentTasks = {}; // item_id -> DOM element
 let stats = { total: 0, completed: 0, skipped: 0, failed: 0, in_progress: 0 };
 let soundEnabled = true;
-let currentLang = 'en';
+let currentLang = 'ar';
 let activeView = 'downloader';
 let cachedLibraryFiles = [];
 let currentlyPlayingFile = '';
@@ -2556,11 +2556,117 @@ if (settingsLangSelect) {
   });
 }
 
+
+// --- Authentic Vector SVG Flags (Windows & Cross-Platform Support) ---
+const FLAG_SVGS = {
+  ar: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#ce1126" d="M0 0h640v160H0z"/><path fill="#fff" d="M0 160h640v160H0z"/><path fill="#000" d="M0 320h640v160H0z"/><circle cx="320" cy="240" r="24" fill="#c09300"/></svg>`,
+  en: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><clipPath id="uk-c"><path d="M0 0v480h640V0z"/></clipPath><g clip-path="url(#uk-c)"><path fill="#012169" d="M0 0h640v480H0z"/><path d="M0 0l640 480M640 0L0 480" stroke="#fff" stroke-width="60"/><path d="M0 0l640 480M640 0L0 480" stroke="#c8102e" stroke-width="40"/><path d="M320 0v480M0 240h640" stroke="#fff" stroke-width="100"/><path d="M320 0v480M0 240h640" stroke="#c8102e" stroke-width="60"/></g></svg>`,
+  es: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#aa151b" d="M0 0h640v120H0zM0 360h640v120H0z"/><path fill="#f1bf00" d="M0 120h640v240H0z"/></svg>`,
+  fr: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#002654" d="M0 0h213.3v480H0z"/><path fill="#fff" d="M213.3 0h213.4v480H213.3z"/><path fill="#ce1126" d="M426.7 0H640v480H426.7z"/></svg>`,
+  de: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#000" d="M0 0h640v160H0z"/><path fill="#d00" d="M0 160h640v160H0z"/><path fill="#ffce00" d="M0 320h640v160H0z"/></svg>`,
+  tr: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#e30a17" d="M0 0h640v480H0z"/><circle cx="260" cy="240" r="110" fill="#fff"/><circle cx="290" cy="240" r="88" fill="#e30a17"/><polygon fill="#fff" points="360,240 400,252 385,216 385,264 400,228"/></svg>`,
+  pt: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#046a38" d="M0 0h256v480H0z"/><path fill="#da291c" d="M256 0h384v480H256z"/><circle cx="256" cy="240" r="60" fill="#ffcd00"/></svg>`,
+  ru: `<svg viewBox="0 0 640 480" class="svg-flag-icon"><path fill="#fff" d="M0 0h640v160H0z"/><path fill="#0039a6" d="M0 160h640v160H0z"/><path fill="#d52b1e" d="M0 320h640v160H0z"/></svg>`
+};
+
+const LANG_NAMES = {
+  ar: "العربية",
+  en: "English",
+  es: "Español",
+  fr: "Français",
+  de: "Deutsch",
+  tr: "Türkçe",
+  pt: "Português",
+  ru: "Русский"
+};
+
+function setupCustomLanguageDropdown(selectEl) {
+  if (!selectEl) return;
+  const parent = selectEl.parentElement;
+  if (!parent) return;
+
+  // Hide the native select
+  selectEl.style.display = 'none';
+
+  // Check if custom wrap already exists
+  let customWrap = parent.querySelector('.custom-lang-wrap');
+  if (customWrap) customWrap.remove();
+
+  customWrap = document.createElement('div');
+  customWrap.className = 'custom-lang-wrap';
+
+  const currentCode = selectEl.value || currentLang || 'ar';
+  const flagSvg = FLAG_SVGS[currentCode] || FLAG_SVGS['ar'];
+  const nameLabel = LANG_NAMES[currentCode] || 'العربية';
+
+  customWrap.innerHTML = `
+    <button type="button" class="custom-lang-btn" aria-haspopup="listbox">
+      <span class="custom-lang-flag">${flagSvg}</span>
+      <span class="custom-lang-name">${nameLabel}</span>
+      <span class="custom-lang-arrow">▾</span>
+    </button>
+    <div class="custom-lang-menu">
+      ${supportedLanguages.map(l => `
+        <div class="custom-lang-item ${l === currentCode ? 'active' : ''}" data-lang="${l}">
+          <span class="custom-lang-flag">${FLAG_SVGS[l] || ''}</span>
+          <span class="custom-lang-label">${LANG_NAMES[l]}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+
+  parent.appendChild(customWrap);
+
+  const btn = customWrap.querySelector('.custom-lang-btn');
+  const menu = customWrap.querySelector('.custom-lang-menu');
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    document.querySelectorAll('.custom-lang-menu.open').forEach(m => {
+      if (m !== menu) m.classList.remove('open');
+    });
+    menu.classList.toggle('open');
+  });
+
+  menu.querySelectorAll('.custom-lang-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const selected = item.dataset.lang;
+      menu.classList.remove('open');
+      playUiSound('pop');
+      selectEl.value = selected;
+      setLanguage(selected);
+    });
+  });
+}
+
+function updateCustomLangDropdowns(lang) {
+  document.querySelectorAll('.custom-lang-wrap').forEach(wrap => {
+    const btn = wrap.querySelector('.custom-lang-btn');
+    if (btn) {
+      const flagEl = btn.querySelector('.custom-lang-flag');
+      const nameEl = btn.querySelector('.custom-lang-name');
+      if (flagEl) flagEl.innerHTML = FLAG_SVGS[lang] || '';
+      if (nameEl) nameEl.textContent = LANG_NAMES[lang] || lang;
+    }
+    wrap.querySelectorAll('.custom-lang-item').forEach(item => {
+      item.classList.toggle('active', item.dataset.lang === lang);
+    });
+  });
+}
+
+// Close custom menus on outside click
+document.addEventListener('click', () => {
+  document.querySelectorAll('.custom-lang-menu.open').forEach(m => m.classList.remove('open'));
+});
+
 function setLanguage(lang) {
-  if (!i18n[lang]) lang = 'en';
+  if (!i18n[lang]) lang = 'ar';
   currentLang = lang;
   document.documentElement.lang = lang;
   document.documentElement.dir = (lang === 'ar' ? 'rtl' : 'ltr');
+  try { localStorage.setItem('mazekty_lang', lang); } catch(e) {}
+  updateCustomLangDropdowns(lang);
   if (langBadge) langBadge.textContent = lang.toUpperCase();
   if (sidebarLangSelect) sidebarLangSelect.value = lang;
   if (settingsLangSelect) settingsLangSelect.value = lang;
@@ -2685,7 +2791,17 @@ function handleWsEvent(msg) {
       break;
 
     case 'progress':
-      updateTaskProgress(msg.item_id, msg.percent, msg.speed, msg.eta, msg.status, msg.title);
+      updateTaskProgress(
+        msg.item_id,
+        msg.percent,
+        msg.speed,
+        msg.eta,
+        msg.status,
+        msg.title,
+        msg.downloaded_mb,
+        msg.total_mb,
+        msg.stage_text
+      );
       break;
 
     case 'item_completed':
@@ -2822,7 +2938,7 @@ function updateTaskStatus(itemId, statusClass, statusText, title, errorDetail) {
   }
 }
 
-function updateTaskProgress(itemId, percent, speed, eta, statusText, title) {
+function updateTaskProgress(itemId, percent, speed, eta, statusText, title, downloadedMb, totalMb, stageText) {
   let card = currentTasks[itemId];
   if (!card) return;
 
@@ -2832,19 +2948,53 @@ function updateTaskProgress(itemId, percent, speed, eta, statusText, title) {
   const pill = card.querySelector('.task-status-pill');
   const titleEl = card.querySelector('.task-title');
 
-  if (fill) fill.style.width = `${percent}%`;
-  if (percentEl) percentEl.textContent = `${percent}%`;
   if (titleEl && title) titleEl.textContent = title;
+
+  if (fill) {
+    fill.classList.remove('indeterminate', 'stage-converting', 'stage-processing');
+
+    if (statusText === 'converting') {
+      fill.classList.add('stage-converting');
+      fill.style.width = '100%';
+      if (percentEl) percentEl.textContent = '100%';
+      if (pill) pill.textContent = stageText || (currentLang === 'ar' ? 'تحويل الصوت (FFmpeg)...' : 'Converting Audio (FFmpeg)...');
+      if (metricsEl) metricsEl.textContent = currentLang === 'ar' ? '⚙️ جاري دمج ومعالجة المسارات...' : '⚙️ Processing & encoding stream...';
+      return;
+    }
+
+    if (statusText === 'processing') {
+      fill.classList.add('stage-processing');
+      fill.style.width = '100%';
+      if (percentEl) percentEl.textContent = '100%';
+      if (pill) pill.textContent = stageText || (currentLang === 'ar' ? 'معالجة الغلاف والوسوم...' : 'Embedding Art & Tags...');
+      if (metricsEl) metricsEl.textContent = currentLang === 'ar' ? '🎨 جاري حفظ صورة الغلاف وبيانات ID3...' : '🎨 Tagging audio & album artwork...';
+      return;
+    }
+
+    if (percent === -1 || (percent <= 0 && downloadedMb > 0)) {
+      fill.classList.add('indeterminate');
+      if (percentEl) percentEl.textContent = `${downloadedMb || 0} MB`;
+    } else {
+      fill.style.width = `${percent}%`;
+      if (percentEl) {
+        if (downloadedMb && totalMb && totalMb > 0) {
+          percentEl.textContent = `${percent}% (${downloadedMb}/${totalMb} MB)`;
+        } else if (downloadedMb) {
+          percentEl.textContent = `${percent}% (${downloadedMb} MB)`;
+        } else {
+          percentEl.textContent = `${percent}%`;
+        }
+      }
+    }
+  }
 
   let metricsStr = '';
   if (speed) metricsStr += `🚀 ${speed} `;
   if (eta) metricsStr += `⏳ ${eta}`;
   if (metricsEl) metricsEl.textContent = metricsStr;
 
-  if (pill && statusText) {
-    if (statusText.startsWith('processing')) pill.textContent = 'معالجة الغلاف والوسوم...';
-    else if (statusText === 'converting') pill.textContent = 'تحويل الصيغة...';
-    else pill.textContent = i18n[currentLang].status_downloading;
+  if (pill && statusText === 'downloading') {
+    pill.textContent = (i18n[currentLang] && i18n[currentLang].status_downloading) || 'جاري التنزيل...';
   }
 }
 
@@ -5136,4 +5286,10 @@ applyTheme();
 
 // Startup
 setupWebSocket();
+
+// Setup Custom SVG Flag Language Dropdowns
+setupCustomLanguageDropdown(sidebarLangSelect);
+setupCustomLanguageDropdown(settingsLangSelect);
+setLanguage(localStorage.getItem('mazekty_lang') || 'ar');
+
 fetchLibrary();

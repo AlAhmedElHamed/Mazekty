@@ -327,6 +327,13 @@ class YouTubeDownloader:
             'nocheckcertificate': False,
             'overwrites': False,
             'noplaylist': True,
+            'socket_timeout': 30,
+            'retries': 15,
+            'fragment_retries': 15,
+            'http_chunk_size': 10485760,  # 10MB chunking prevents YouTube throttling on long videos
+            'buffersize': 1024 * 64,
+            'concurrent_fragment_downloads': 4,
+            'keepvideo': False,
         }
 
         # Set ffmpeg_location so yt-dlp finds portable or local FFmpeg

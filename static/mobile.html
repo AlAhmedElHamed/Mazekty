@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مزيكتي للموبايل - Mazekty Mobile</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: rgba(22, 30, 49, 0.85);
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --accent: #ec4899;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.1);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Cairo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 20px 16px 120px 16px;
+      overflow-x: hidden;
+    }
+
+    /* Mobile Header */
+    .mobile-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: #818cf8;
+      margin-bottom: 12px;
+    }
+
+    .playlist-title {
+      font-size: 1.6rem;
+      font-weight: 900;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .playlist-meta {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+    }
+
+    /* Quick Action Buttons */
+    .actions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .btn-mobile {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 12px;
+      border-radius: var(--radius);
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn-mobile:active {
+      transform: scale(0.97);
+    }
+
+    .btn-download-all {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff;
+      grid-column: span 2;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+    }
+
+    .btn-play-all {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+    }
+
+    .btn-export-m3u {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+    }
+
+    /* Track List */
+    .tracks-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .track-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .track-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .track-name {
+      font-size: 0.95rem;
+      font-weight: 700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 4px;
+    }
+
+    .track-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .track-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-track-action {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--border);
+      color: #fff;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    .btn-track-action:active {
+      transform: scale(0.92);
+      background: var(--primary);
+    }
+
+    /* Fixed Bottom Player for Mobile */
+    .mobile-player {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 1px solid var(--border);
+      padding: 12px 16px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 1000;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+      display: none;
+    }
+
+    .player-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+
+    .native-player {
+      width: 100%;
+      height: 38px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="mobile-header">
+    <div class="brand-pill">
+      <span>📱</span>
+      <span>مزامنة مزيكتي للآيفون والموبايل</span>
+    </div>
+    <h1 class="playlist-title" id="playlistTitle">قائمة التشغيل (Mazekty Playlist)</h1>
+    <p class="playlist-meta" id="playlistMeta">جاري تحميل المقاطع الصوتية...</p>
+  </div>
+
+  <div class="actions-grid">
+    <a href="/api/mobile/download-zip" class="btn-mobile btn-download-all" id="btnDownloadZip">
+      <span>📦</span>
+      <span>تحميل كل الأغاني ملف مضغوط (ZIP للآيفون)</span>
+    </a>
+    <button type="button" class="btn-mobile btn-play-all" id="btnPlayAll">
+      <span>▶️</span>
+      <span>تشغيل البلاي ليست</span>
+    </button>
+    <a href="/api/export-m3u" download="Mazekty_Playlist.m3u" class="btn-mobile btn-export-m3u" id="btnExportM3u">
+      <span>📜</span>
+      <span>تصدير M3U لـ VLC</span>
+    </a>
+  </div>
+
+  <div class="tracks-list" id="tracksList"></div>
+
+  <!-- Bottom Audio Player -->
+  <div class="mobile-player" id="mobilePlayer">
+    <div class="player-title" id="nowPlayingText">-</div>
+    <audio id="audioElement" controls class="native-player"></audio>
+  </div>
+
+  <script>
+    let tracks = [];
+    let currentTrackIndex = 0;
+    const tracksList = document.getElementById('tracksList');
+    const playlistMeta = document.getElementById('playlistMeta');
+    const mobilePlayer = document.getElementById('mobilePlayer');
+    const audioElement = document.getElementById('audioElement');
+    const nowPlayingText = document.getElementById('nowPlayingText');
+    const btnPlayAll = document.getElementById('btnPlayAll');
+
+    async function loadTracks() {
+      try {
+        const res = await fetch('/api/downloads');
+        const data = await res.json();
+        tracks = data.files || [];
+        renderTracks();
+      } catch (e) {
+        playlistMeta.textContent = 'تعذر الاتصال بالسيرفر';
+      }
+    }
+
+    function renderTracks() {
+      tracksList.innerHTML = '';
+      if (tracks.length === 0) {
+        tracksList.innerHTML = '<div class="empty-state"><p>لا توجد أغاني في هذا المجلد حالياً.</p></div>';
+        playlistMeta.textContent = '0 مقطع';
+        return;
+      }
+
+      playlistMeta.textContent = `${tracks.length} مقطع صوتي متاح للتحميل والتشغيل`;
+
+      tracks.forEach((t, idx) => {
+        const card = document.createElement('div');
+        card.className = 'track-card';
+        card.innerHTML = `
+          <div class="track-info">
+            <div class="track-name" title="${escapeHtml(t.name)}">${escapeHtml(t.name)}</div>
+            <div class="track-sub">${t.size_mb} MB</div>
+          </div>
+          <div class="track-buttons">
+            <button type="button" class="btn-track-action" onclick="playTrack(${idx})" title="تشغيل">▶️</button>
+            <a href="/api/audio/${encodeURIComponent(t.name)}" download="${escapeHtml(t.name)}" class="btn-track-action" title="تحميل">📥</a>
+          </div>
+        `;
+        tracksList.appendChild(card);
+      });
+    }
+
+    function playTrack(idx) {
+      if (idx < 0 || idx >= tracks.length) return;
+      currentTrackIndex = idx;
+      const t = tracks[idx];
+      nowPlayingText.textContent = t.name;
+      audioElement.src = `/api/audio/${encodeURIComponent(t.name)}`;
+      mobilePlayer.style.display = 'block';
+      audioElement.play();
+    }
+
+    // Auto next track
+    audioElement.addEventListener('ended', () => {
+      if (currentTrackIndex + 1 < tracks.length) {
+        playTrack(currentTrackIndex + 1);
+      }
+    });
+
+    btnPlayAll.addEventListener('click', () => {
+      if (tracks.length > 0) playTrack(0);
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    loadTracks();
+  </script>
+</body>
+</html>

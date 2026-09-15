@@ -1,0 +1,41 @@
+# Virtual Environments
+venv/
+.venv/
+env/
+**/venv/
+**/.venv/
+
+# Python Bytecode & Cache
+__pycache__/
+**/*__pycache__*
+*.py[cod]
+*$py.class
+*.so
+
+# User data and media downloads
+downloads/
+config.json
+
+# macOS App Bundles & Disk Images (Distribute via GitHub Releases)
+*.app
+*.app/**
+**/*.app
+**/*.app/**
+*.dmg
+**/*.dmg
+
+# macOS / Windows OS artifacts
+.DS_Store
+**/.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+
+# Logs & temp
+*.log
+*.tmp
+mazekty_linux_dist/
+mazekty_win_dist/

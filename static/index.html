@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mazekty Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body class="macos-window">
+  <!-- Dynamic Ambient Background & Confetti -->
+  <canvas id="bgCanvas" class="background-canvas"></canvas>
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <!-- App Wrapper with Native Sidebar Layout -->
+  <div class="app-layout">
+    
+    <!-- Native Sidebar -->
+    <aside class="sidebar glass-sidebar">
+      <!-- Window Drag & Brand -->
+      <div class="sidebar-header">
+        <div class="brand-wrap bounce-hover">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <span class="brand-name" id="appBrandName">Mazekty</span>
+            <span class="pro-tag">PRO</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <button type="button" class="nav-item active" data-view="downloader">
+          <span class="nav-icon">📥</span>
+          <span class="nav-label" data-i18n="nav_downloader">التحميل السريع</span>
+        </button>
+        <button type="button" class="nav-item" data-view="search">
+          <span class="nav-icon">🔍</span>
+          <span class="nav-label" data-i18n="nav_search">البحث المباشر</span>
+          <span class="badge-pro">PRO</span>
+        </button>
+        <button type="button" class="nav-item" data-view="library">
+          <span class="nav-icon">📁</span>
+          <span class="nav-label" data-i18n="nav_library">المكتبة الصوتية</span>
+        </button>
+        <button type="button" class="nav-item" data-view="studio">
+          <span class="nav-icon">👑</span>
+          <span class="nav-label" data-i18n="nav_studio">استوديو برو</span>
+          <span class="badge-pro">PRO</span>
+        </button>
+        <button type="button" class="nav-item" data-view="sync">
+          <span class="nav-icon">📱</span>
+          <span class="nav-label" data-i18n="nav_sync">النقل والمزامنة</span>
+          <span class="badge-pro">PRO</span>
+        </button>
+        <button type="button" class="nav-item" data-view="settings">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label" data-i18n="nav_settings">الإعدادات</span>
+        </button>
+      </nav>
+
+      <!-- Sidebar Footer Tools -->
+      <div class="sidebar-footer">
+        <div class="quick-tools">
+          <button type="button" class="tool-circle-btn" id="btnToggleLang" title="تغيير اللغة / Switch Language">
+            <span class="lang-code" id="langBadge">EN</span>
+          </button>
+          <button type="button" class="tool-circle-btn" id="btnToggleSound" title="كتم / تشغيل المؤثرات">
+            <span id="soundIcon">🔊</span>
+          </button>
+          <button type="button" class="tool-circle-btn" id="btnOpenSidebarFolder" title="فتح مجلد التنزيلات">
+            <span>📂</span>
+          </button>
+        </div>
+        <div class="status-indicator-wrap" id="connectionBadge">
+          <span class="pulse-dot"></span>
+          <span class="status-text" id="connectionText" data-i18n="status_connecting">جاري الاتصال...</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Stage -->
+    <div class="main-stage">
+      
+      <!-- Top Stage Bar -->
+      <header class="stage-header">
+        <div class="stage-title-wrap">
+          <h2 class="stage-title" id="stageTitle" data-i18n="nav_downloader">التحميل السريع</h2>
+          <div class="music-wave" id="headerWave" title="نغمات حية">
+            <span class="bar bar-1"></span>
+            <span class="bar bar-2"></span>
+            <span class="bar bar-3"></span>
+            <span class="bar bar-4"></span>
+            <span class="bar bar-5"></span>
+          </div>
+        </div>
+        <div class="stage-actions">
+          <div class="save-folder-badge" id="btnQuickFolder" title="اضغط لتغيير المجلد">
+            <span class="folder-icon">📁</span>
+            <span class="folder-name-label" id="topFolderLabel">downloads</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Views Container -->
+      <div class="stage-content-scroll">
+
+        <!-- VIEW 1: DOWNLOADER (Free & Pro Core) -->
+        <section class="view-panel active" id="view-downloader">
+          <!-- Input Box Card -->
+          <div class="card glass-card">
+            <div class="card-header">
+              <label for="urlInput" class="input-label">
+                <span class="animated-icon">🔗</span>
+                <span data-i18n="links_label">روابط اليوتيوب (فيديو، بلاي ليست، أو عدة روابط):</span>
+              </label>
+              <div class="input-tools">
+                <button type="button" class="tool-btn hover-glow" id="btnPaste" data-i18n="btn_paste">📋 لصق من الحافظة</button>
+                <button type="button" class="tool-btn danger hover-glow" id="btnClear" data-i18n="btn_clear">مسح</button>
+              </div>
+            </div>
+
+            <textarea 
+              id="urlInput" 
+              class="url-textarea glowing-focus" 
+              rows="3" 
+              placeholder="ضع الرابط هنا... فيديو، قائمة تشغيل (Playlist)، أو عدة روابط (كل رابط في سطر)..."
+              dir="ltr"
+            ></textarea>
+
+            <!-- Options Row (Multi-Format, Bitrate, Bandwidth Limiter) -->
+            <div class="options-grid-enhanced">
+              <div class="option-item">
+                <label for="formatSelect" class="option-label" data-i18n="format_label">صيغة التحميل (Format):</label>
+                <select id="formatSelect" class="select-control">
+                  <option value="mp3" selected>🎵 MP3 (الصوت القياسي العالمي)</option>
+                  <option value="m4a">🍎 M4A (Apple AAC عالي النقاوة)</option>
+                  <option value="flac">💎 FLAC (صوت نقي بدون فقد Lossless)</option>
+                  <option value="wav">🎙️ WAV (جودة ستوديو خام Studio Master)</option>
+                  <option value="mp4">🎬 MP4 (فيديو وصوت كامل HD Video)</option>
+                </select>
+              </div>
+
+              <div class="option-item" id="qualityWrapper">
+                <label for="qualitySelect" class="option-label" data-i18n="quality_label">جودة الصوت (Bitrate):</label>
+                <select id="qualitySelect" class="select-control">
+                  <option value="320" selected data-i18n-opt="q_320">⚡ 320 kbps (أعلى جودة صوت - Ultra HD)</option>
+                  <option value="256" data-i18n-opt="q_256">✨ 256 kbps (جودة ممتازة - High)</option>
+                  <option value="192" data-i18n-opt="q_192">🎵 192 kbps (جودة جيدة - Medium)</option>
+                  <option value="128" data-i18n-opt="q_128">📦 128 kbps (حجم أصغر - Standard)</option>
+                </select>
+              </div>
+
+              <div class="option-item">
+                <label for="speedLimitSelect" class="option-label" data-i18n="speed_limit_label">محدد سرعة التنزيل:</label>
+                <select id="speedLimitSelect" class="select-control">
+                  <option value="0" selected data-i18n-opt="speed_unlimited">🚀 بلا حدود (أقصى سرعة)</option>
+                  <option value="1024">🌐 1 MB/s (متوسط للباقة)</option>
+                  <option value="3072">⚡ 3 MB/s (سريع وموزون)</option>
+                  <option value="512">🐌 500 KB/s (توفير الإنترنت)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="checkbox-row-enhanced mt-3">
+              <label class="checkbox-label">
+                <input type="checkbox" id="embedThumbnail" checked>
+                <span data-i18n="embed_thumb">دمج صورة الغلاف</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" id="embedMetadata" checked>
+                <span data-i18n="embed_meta">دمج بيانات الميتا والوسوم</span>
+              </label>
+              <div class="feature-tag glow-pulse">
+                <span data-i18n="skip_feature">⚡ تخطي المكرر تلقائياً</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="actions-row mt-4">
+              <button type="button" class="btn-action btn-analyze hover-lift" id="btnAnalyze">
+                <span data-i18n="btn_analyze">🔍 فحص الروابط / البلاي ليست</span>
+              </button>
+              <button type="button" class="btn-action btn-schedule hover-lift" id="btnScheduleModal">
+                <span>⏰</span>
+                <span data-i18n="btn_schedule">جدولة التنزيل</span>
+              </button>
+              <button type="button" class="btn-action btn-download hover-lift shimmer-btn" id="btnDownload">
+                <svg class="download-icon spinning-on-active" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span id="btnDownloadText" data-i18n="btn_download">إضافة إلى الطابور وبدء التحميل</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Preview & Playlist Selection Card -->
+          <div class="card preview-card glass-card hidden slide-down" id="previewCard">
+            <div class="card-header">
+              <div class="title-with-badge">
+                <h3 class="card-title" data-i18n="preview_title">نتائج فحص الروابط وقوائم التشغيل</h3>
+                <span id="playlistStatsBadge" class="glowing-badge"></span>
+              </div>
+              <div class="preview-actions">
+                <button type="button" class="tool-btn" id="btnSelectAllPreview" data-i18n="btn_select_all">تحديد الكل</button>
+                <button type="button" class="tool-btn" id="btnDeselectAllPreview" data-i18n="btn_deselect_all">إلغاء التحديد</button>
+                <button type="button" class="tool-btn" id="btnClosePreview" data-i18n="btn_close">إغلاق</button>
+              </div>
+            </div>
+
+            <!-- Range Selector for Playlists -->
+            <div class="range-selector-row" id="rangeSelectorRow" style="display:none;">
+              <span data-i18n="range_label">تحميل نطاق محدد من المقاطع:</span>
+              <input type="number" id="rangeStart" class="text-control mini-input" value="1" min="1" />
+              <span>إلى</span>
+              <input type="number" id="rangeEnd" class="text-control mini-input" value="10" min="1" />
+              <button type="button" class="tool-btn highlight" id="btnApplyRange" data-i18n="btn_apply_range">تطبيق النطاق</button>
+            </div>
+
+            <div id="previewList" class="preview-list"></div>
+
+            <div class="preview-footer mt-3" style="text-align: left;">
+              <button type="button" class="btn-action btn-download hover-lift" id="btnDownloadSelected">
+                <span>📥</span>
+                <span data-i18n="btn_download_selected">تحميل المقاطع المحددة فقط</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Queue Card with Pause/Resume -->
+          <div class="card queue-card glass-card">
+            <div class="card-header">
+              <div class="header-left-title">
+                <span class="animated-icon pulse-icon">⚡</span>
+                <span class="card-title" data-i18n="queue_title">طابور التنزيل والمتابعة اللحظية</span>
+              </div>
+              <div class="header-right-tools">
+                <button type="button" class="tool-btn highlight hover-glow" id="btnPauseResumeQueue" title="إيقاف مؤقت أو استئناف الطابور">
+                  <span id="pauseQueueIcon">⏸️</span>
+                  <span id="pauseQueueText" data-i18n="btn_pause_queue">إيقاف مؤقت</span>
+                </button>
+                <div class="stats-pills" id="statsPills">
+                  <span class="pill pill-total"><span data-i18n="stat_total">الإجمالي:</span> <strong id="statTotal" class="stat-number">0</strong></span>
+                  <span class="pill pill-active"><span data-i18n="stat_active">قيد المعالجة:</span> <strong id="statActive" class="stat-number">0</strong></span>
+                  <span class="pill pill-done"><span data-i18n="stat_done">اكتمل:</span> <strong id="statDone" class="stat-number">0</strong></span>
+                  <span class="pill pill-skipped"><span data-i18n="stat_skipped">تم التخطي:</span> <strong id="statSkipped" class="stat-number">0</strong></span>
+                  <span class="pill pill-fail"><span data-i18n="stat_fail">فشل:</span> <strong id="statFail" class="stat-number">0</strong></span>
+                </div>
+                <button type="button" class="tool-btn hover-glow" id="btnClearCompleted" data-i18n="btn_clear_completed">🧹 تنظيف</button>
+              </div>
+            </div>
+
+            <div id="tasksList" class="tasks-list">
+              <div class="empty-state" id="emptyTasks">
+                <div class="empty-icon floating-anim">🎵</div>
+                <p data-i18n="empty_tasks">لا توجد تنزيلات في الطابور حالياً. الصق الروابط واضغط "إضافة إلى الطابور" ليبدأ السحر!</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 2: IN-APP SEARCH [PRO FEATURE] -->
+        <section class="view-panel" id="view-search">
+          <div class="card glass-card">
+            <div class="pro-header-banner">
+              <span class="badge-pro-gold">👑 MAZEKTY PRO</span>
+              <h3 class="pro-banner-title" data-i18n="search_banner_title">البحث المباشر من داخل التطبيق</h3>
+              <p class="pro-banner-desc" data-i18n="search_banner_desc">ابحث عن أي أغنية أو فنان أو ألبوم مباشرة بدون الحاجة لفتح المتصفح أو نسخ الروابط (مجاني وبدون أي مفاتيح API).</p>
+            </div>
+
+            <div class="search-input-wrap">
+              <input type="text" id="searchInput" class="search-field" placeholder="ابحث باسم الأغنية أو الفنان... (مثال: عمرو دياب، Adele، تراك هادئ)..." dir="auto" />
+              <button type="button" class="btn-action btn-search-go hover-lift" id="btnSearchGo">
+                <span>🔍</span>
+                <span data-i18n="btn_search_now">بحث الآن</span>
+              </button>
+            </div>
+
+            <div id="searchResults" class="search-results-grid">
+              <div class="empty-search-state">
+                <div class="search-icon-anim">🎧</div>
+                <p data-i18n="search_prompt">اكتب اسم ما تريد الاستماع إليه واضغط "بحث الآن"</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 3: LIBRARY (Enhanced with M3U, Sort, Search, Tags) -->
+        <section class="view-panel" id="view-library">
+          <div class="card glass-card">
+            <div class="card-header">
+              <div class="title-with-badge">
+                <h3 class="card-title">
+                  <span class="animated-icon">📁</span>
+                  <span data-i18n="library_title">المكتبة الصوتية المحملة</span>
+                </h3>
+                <span class="auto-refresh-badge glowing-badge" data-i18n="auto_refresh_badge">تحديث تلقائي ⚡</span>
+              </div>
+              <div class="library-tools">
+                <button type="button" class="tool-btn highlight hover-glow" id="btnLibraryMobileSync" title="مزامنة ونقل الأغاني للآيفون والموبايل عبر الواي فاي">
+                  <span>📱</span>
+                  <span data-i18n="btn_mobile_sync">نقل للموبايل (QR Sync)</span>
+                </button>
+                <button type="button" class="tool-btn highlight hover-glow" id="btnExportM3U" title="تصدير قائمة تشغيل متوافقة مع جميع المشغلات">
+                  <span>📜</span>
+                  <span data-i18n="btn_export_m3u">تصدير M3U</span>
+                </button>
+                <button type="button" class="tool-btn hover-glow" id="btnRefreshLibrary" data-i18n="btn_refresh">🔄 تحديث</button>
+                <button type="button" class="tool-btn highlight hover-lift" id="btnOpenLibraryFolder" data-i18n="btn_open_finder">📂 فتح المجلد</button>
+              </div>
+            </div>
+
+            <!-- Search, Filter & Sort Controls -->
+            <div class="library-filter-row">
+              <input type="text" id="libraryFilterInput" class="filter-control flex-1" placeholder="تصفية والبحث في الملفات بالاسم..." dir="auto" />
+              <select id="librarySortSelect" class="select-control auto-width">
+                <option value="date_desc" selected data-i18n="sort_date_desc">📅 الأحدث إضافة</option>
+                <option value="date_asc" data-i18n="sort_date_asc">📅 الأقدم</option>
+                <option value="name_asc" data-i18n="sort_name_asc">🔤 أبجدياً (أ-ي)</option>
+                <option value="size_desc" data-i18n="sort_size_desc">💾 الأكبر حجماً</option>
+              </select>
+            </div>
+
+            <div id="libraryList" class="library-list">
+              <div class="empty-state" id="emptyLibrary">
+                <p data-i18n="empty_library">جاري فحص المجلد...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- VIEW 4: PRO STUDIO (10 PRO AUDIO TOOLS) -->
+        <section class="view-panel" id="view-studio">
+          <!-- Pro Studio Banner -->
+          <div class="pro-hero-card glass-card">
+            <div class="pro-hero-content">
+              <div class="pro-crown-anim">👑</div>
+              <div>
+                <h3 class="pro-hero-title">استوديو مزيكتي برو (Mazekty Pro Studio)</h3>
+                <p class="pro-hero-subtitle">أدوات هندسة وتحسين الصوت المتقدمة تعمل 100% محلياً على جهازك وبدون أي اشتراكات.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="studio-grid">
+            
+            <!-- Tool 1: Audio Trimmer & Ringtone Maker -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">✂️</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="trimmer_title">قاص الصوت وصانع نغمات الآيفون</h4>
+                  <p class="studio-tool-desc" data-i18n="trimmer_desc">اقتطع جزءاً محدداً من الأغنية أو حوله إلى نغمة رنين للآيفون (.m4r).</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف المراد تقطيعه:</label>
+                <select id="trimFileSelect" class="select-control file-select-box"></select>
+                <div class="time-inputs-row">
+                  <div class="time-input-group">
+                    <label data-i18n="start_sec_label">البداية (بالثواني):</label>
+                    <input type="number" id="trimStart" class="text-control" value="0" min="0" step="1" />
+                  </div>
+                  <div class="time-input-group">
+                    <label data-i18n="end_sec_label">النهاية (بالثواني):</label>
+                    <input type="number" id="trimEnd" class="text-control" value="30" min="1" step="1" />
+                  </div>
+                </div>
+                <label class="checkbox-label mt-2">
+                  <input type="checkbox" id="trimIsRingtone" checked />
+                  <span data-i18n="make_ringtone_label">صنع نغمة رنين للآيفون بصيغة (.m4r)</span>
+                </label>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoTrim">
+                  <span>✂️</span>
+                  <span data-i18n="btn_trim_execute">قص وحفظ التراك الآن</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 2: Loudness Normalizer & Bass Booster -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🎚️</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="enhancer_title">موازنة الصوت وتضخيم البيس (Equalizer)</h4>
+                  <p class="studio-tool-desc" data-i18n="enhancer_desc">توحيد درجات الصوت وفق معايير الاستوديو وإبراز ترددات البيس الفخمة.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف للمعالجة:</label>
+                <select id="enhanceFileSelect" class="select-control file-select-box"></select>
+                <div class="checkbox-stack mt-3">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="enhanceNorm" checked />
+                    <span data-i18n="loudnorm_label">موازنة مستوى الصوت (Loudness EBU R128)</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="enhanceBass" checked />
+                    <span data-i18n="bassboost_label">تضخيم ترددات البيس الفخمة (Deep Bass Boost +6dB)</span>
+                  </label>
+                </div>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoEnhance">
+                  <span>🎛️</span>
+                  <span data-i18n="btn_enhance_execute">تحسين وحفظ نسخة الاستوديو</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 3: Vocal Remover & Karaoke Maker [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🎤</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="vocal_remover_title">عازل الصوت وصانع الكاريوكي</h4>
+                  <p class="studio-tool-desc" data-i18n="vocal_remover_desc">عزل صوت المغني والاحتفاظ بالموسيقى والآلات عبر تقنية إلغاء الطور الصوتي.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف المراد تحويله لكاريوكي:</label>
+                <select id="vocalFileSelect" class="select-control file-select-box"></select>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoVocalRemove">
+                  <span>🎤</span>
+                  <span data-i18n="btn_vocal_execute">عزل الصوت وتوليد الكاريوكي</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 4: Pitch & Speed / Key & BPM Shifter [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🎼</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="pitch_shifter_title">مغير طبقة الصوت وسرعة الإيقاع (Pitch & BPM)</h4>
+                  <p class="studio-tool-desc" data-i18n="pitch_shifter_desc">تغيير طبقة الصوت (Key) وسرعة الأغنية (Tempo) باحترافية.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف:</label>
+                <select id="pitchFileSelect" class="select-control file-select-box"></select>
+                
+                <div class="slider-control-group mt-2">
+                  <div class="slider-header">
+                    <span data-i18n="pitch_label">طبقة النغمة (Semitones):</span>
+                    <strong id="pitchValueLabel">0 (أصلي)</strong>
+                  </div>
+                  <input type="range" id="pitchSlider" min="-6" max="6" value="0" step="1" class="slider-input" />
+                </div>
+
+                <div class="slider-control-group mt-2">
+                  <div class="slider-header">
+                    <span data-i18n="speed_label">سرعة التشغيل (Tempo):</span>
+                    <strong id="speedValueLabel">1.0x</strong>
+                  </div>
+                  <input type="range" id="speedSlider" min="0.5" max="1.8" value="1.0" step="0.05" class="slider-input" />
+                </div>
+
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoPitchSpeed">
+                  <span>🎵</span>
+                  <span data-i18n="btn_pitch_execute">تطبيق التعديلات وحفظ الماستر</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 5: 8D Spatial Audio Effect [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🎧</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="spatial_title">مؤثر الصوت المكاني ثلاثي الأبعاد (8D Audio)</h4>
+                  <p class="studio-tool-desc" data-i18n="spatial_desc">توليد نغمات تدور 360 درجة حول الرأس بتأثير هيدفون ساحر.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف:</label>
+                <select id="spatialFileSelect" class="select-control file-select-box"></select>
+                <p class="hint-text mt-2">💡 يُفضل الاستماع إلى ملفات الـ 8D باستخدام سماعات الرأس (Headphones) للحصول على أفضل تجربة ثلاثية الأبعاد.</p>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoSpatial8D">
+                  <span>🎧</span>
+                  <span data-i18n="btn_spatial_execute">تحويل إلى صوت 8D محيطي</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 6: 10-Band Graphic Equalizer [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🎛️</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="equalizer_title">إكولايزر احترافي 10 قنوات (Graphic EQ)</h4>
+                  <p class="studio-tool-desc" data-i18n="equalizer_desc">إعدادات استوديو مسبقة التجهيز لضبط الترددات بدقة متناهية.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف:</label>
+                <select id="eqFileSelect" class="select-control file-select-box"></select>
+                <label class="form-label mt-2" data-i18n="eq_preset_label">اختر الإعداد المسبق (Preset):</label>
+                <select id="eqPresetSelect" class="select-control">
+                  <option value="bass_boost">🔊 Bass Boost (تضخيم هائل للباس)</option>
+                  <option value="vocal_clarity">🎤 Vocal Clarity (صفاء ونقاوة صوت الغناء)</option>
+                  <option value="rock">🎸 Rock & Acoustic (طاقة وقوة الآلات الحية)</option>
+                  <option value="electronic">⚡ Electronic / Dance (إيقاعات سريعة وواضحة)</option>
+                  <option value="podcast">🎙️ Podcast & Voice (عزل الضوضاء وإبراز الكلام)</option>
+                </select>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoEqualizer">
+                  <span>🎛️</span>
+                  <span data-i18n="btn_eq_execute">تطبيق الإكولايزر وحفظ التراك</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 7: Smart Silence Remover [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🤫</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="silence_title">حاذف الصمت الذكي (Smart Silence Remover)</h4>
+                  <p class="studio-tool-desc" data-i18n="silence_desc">كشف وقص فترات السكون الميتة في البداية والنهاية تلقائياً.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر الملف لتنظيف الصمت منه:</label>
+                <select id="silenceFileSelect" class="select-control file-select-box"></select>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoSilenceRemove">
+                  <span>✂️</span>
+                  <span data-i18n="btn_silence_execute">تنظيف الصمت فوراً</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 8: Batch Audio Converter [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🔄</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="converter_title">محول الصيغ الجماعي (Batch Audio Converter)</h4>
+                  <p class="studio-tool-desc" data-i18n="converter_desc">تحويل جميع ملفات المجلد إلى صيغة محددة دفعة واحدة.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="target_format_label">اختر الصيغة المستهدفة للتحويل:</label>
+                <select id="batchFormatSelect" class="select-control">
+                  <option value="mp3">🎵 MP3 (320 kbps)</option>
+                  <option value="m4a">🍎 M4A (Apple AAC)</option>
+                  <option value="flac">💎 FLAC (Lossless)</option>
+                  <option value="wav">🎙️ WAV (Studio Master)</option>
+                </select>
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoBatchConvert">
+                  <span>🔄</span>
+                  <span data-i18n="btn_convert_execute">تحويل كافة ملفات المكتبة الآن</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 9: Album Art Replacer [NEW PRO] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">🖼️</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="art_title">مغير غلاف الألبوم بدقة عالية (Album Art)</h4>
+                  <p class="studio-tool-desc" data-i18n="art_desc">استبدال صورة غلاف الأغنية بأي صورة من جهازك بدقة متناهية.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="select_file_label">اختر ملف الصوت:</label>
+                <select id="artFileSelect" class="select-control file-select-box"></select>
+                <label class="form-label mt-2" data-i18n="select_image_label">اختر صورة الغلاف (JPG/PNG):</label>
+                <input type="file" id="artImageInput" accept="image/jpeg,image/png" class="file-control" />
+                <button type="button" class="btn-action btn-studio-action hover-lift mt-auto" id="btnDoReplaceArtwork">
+                  <span>🖼️</span>
+                  <span data-i18n="btn_art_execute">تثبيت صورة الغلاف في الملف</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Tool 10: Mobile, iPhone & System Media Playlist Sync [UPGRADED] -->
+            <div class="card glass-card studio-card">
+              <div class="studio-tool-header">
+                <span class="tool-badge-icon">📱</span>
+                <div>
+                  <h4 class="studio-tool-title" data-i18n="applemusic_title">مزامنة الآيفون وقوائم تشغيل Apple Music</h4>
+                  <p class="studio-tool-desc" data-i18n="applemusic_desc">إنشاء قوائم تشغيل مخصصة ونقل الأغاني مباشرة إلى الآيفون عبر Apple Music و Finder والـ Wi-Fi.</p>
+                </div>
+              </div>
+              <div class="studio-form">
+                <label class="form-label" data-i18n="playlist_name_label">اسم قائمة التشغيل (Playlist Name):</label>
+                <input type="text" id="syncPlaylistName" class="text-control" value="مزيكتي - المفضلة" dir="auto" />
+
+                <label class="form-label mt-2" data-i18n="select_file_label">اختر التراك (أو مزامنة كل المكتبة):</label>
+                <select id="syncFileSelect" class="select-control file-select-box"></select>
+
+                <div class="apple-music-action-row mt-3">
+                  <button type="button" class="btn-action btn-apple-sync hover-lift flex-1" id="btnSyncAppleMusic">
+                    <span>🍎</span>
+                    <span data-i18n="btn_sync_now">إضافة المقطع للبلاي ليست</span>
+                  </button>
+                  <button type="button" class="btn-action btn-secondary hover-lift" id="btnSyncAllAppleMusic" title="مزامنة كل المكتبة في هذه القائمة">
+                    <span>⚡</span>
+                    <span data-i18n="btn_sync_all">مزامنة كل الأغاني للقائمة</span>
+                  </button>
+                </div>
+
+                <div class="apple-music-action-row mt-2">
+                  <button type="button" class="btn-action btn-secondary hover-lift flex-1" id="btnSyncIosFinder" title="تحفيز مزامنة الآيفون عبر كابل USB في Finder">
+                    <span>📲</span>
+                    <span data-i18n="btn_sync_finder">مزامنة الآيفون (Finder/USB)</span>
+                  </button>
+                  <button type="button" class="btn-action btn-schedule hover-lift flex-1" id="btnOpenMobileSyncModal" title="نقل لاسلكي للأيفون بدون كابل عبر الواي فاي">
+                    <span>📶</span>
+                    <span data-i18n="btn_mobile_airsync">نقل عبر QR Code والواي فاي</span>
+                  </button>
+                </div>
+
+                <div class="mt-2">
+                  <button type="button" class="btn-action btn-primary hover-lift w-100" id="btnGoToSyncTab">
+                    <span>🚀</span>
+                    <span data-i18n="btn_goto_sync_tab">فتح لوحة النقل والمزامنة المستقلة 📱</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- VIEW 5: DEDICATED SYNC & TRANSFER (Apple, iPhone, AirSync QR & Playlists) -->
+        <section class="view-panel" id="view-sync">
+          
+          <!-- Sync Hero Status Card -->
+          <div class="sync-hero-card glass-card">
+            <div class="sync-hero-content">
+              <div class="sync-hero-icon-wrap">
+                <span class="sync-hero-icon">📱</span>
+                <span class="sync-hero-pulse"></span>
+              </div>
+              <div class="sync-hero-text">
+                <h3 class="sync-hero-title" data-i18n="sync_hero_title">مركز النقل والمزامنة لأجهزة الآيفون وأبل</h3>
+                <p class="sync-hero-desc" data-i18n="sync_hero_desc">
+                  نظام مزامنة متطور بدون أي اشتراكات أو أطراف خارجية: بث لاسلكي فوري عبر QR Code وشبكة Wi-Fi، إنشاء وتصدير قوائم التشغيل (Playlists)، والمزامنة السلكية مع Apple Music و Finder.
+                </p>
+              </div>
+            </div>
+            <div class="sync-hero-badges">
+              <div class="sync-status-pill" id="syncWifiStatusBadge">
+                <span class="pill-dot active"></span>
+                <span id="syncWifiStatusText">Wi-Fi: جاري الكشف...</span>
+              </div>
+              <div class="sync-status-pill" id="syncUsbStatusBadge">
+                <span class="pill-dot" id="syncUsbDot"></span>
+                <span id="syncUsbStatusText">USB: جاري فحص الأجهزة...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dual Column Main Layout -->
+          <div class="sync-layout-grid">
+
+            <!-- COLUMN 1: AirSync QR Station -->
+            <div class="card glass-card sync-col-card">
+              <div class="card-header">
+                <div class="card-title-group">
+                  <span class="card-title-icon">⚡</span>
+                  <div>
+                    <h3 class="card-title" data-i18n="sync_airsync_title">المزامنة اللاسلكية الفورية (AirSync QR Code)</h3>
+                    <p class="card-subtitle" data-i18n="sync_airsync_subtitle">امسح الكود بكاميرا الآيفون لفتح المشغل والمحمل المخصص لـ Safari فوراً</p>
+                  </div>
+                </div>
+                <button type="button" class="tool-btn hover-glow" id="btnSyncRefreshQr" title="تحديث الكود">
+                  <span>🔄</span>
+                  <span data-i18n="btn_refresh">تحديث</span>
+                </button>
+              </div>
+
+              <!-- Network Interface Selector -->
+              <div class="sync-network-bar">
+                <label for="syncIpDropdown" class="sync-bar-label">
+                  <span>🌐</span>
+                  <span data-i18n="sync_network_adapter">عنوان الشبكة / Network IP:</span>
+                </label>
+                <div class="sync-select-wrap">
+                  <select id="syncIpDropdown" class="select-control sync-ip-select"></select>
+                </div>
+              </div>
+
+              <!-- Glowing QR Code Frame -->
+              <div class="sync-qr-stage">
+                <div class="qr-glow-frame">
+                  <div class="frame-corner top-left"></div>
+                  <div class="frame-corner top-right"></div>
+                  <div class="frame-corner bottom-left"></div>
+                  <div class="frame-corner bottom-right"></div>
+                  <div class="scan-laser-line"></div>
+                  <div id="syncTabQrContainer" class="qr-code-canvas-box">
+                    <span class="qr-placeholder-text" data-i18n="qr_loading">جاري إنشاء كود QR فائق السرعة...</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile URL Display & Actions -->
+              <div class="sync-url-box">
+                <div class="sync-url-input-group">
+                  <span class="url-badge">LAN</span>
+                  <input type="text" id="syncTabMobileUrl" class="sync-url-input" readonly dir="ltr" placeholder="http://192.168.x.x:8000/mobile">
+                  <button type="button" class="tool-btn hover-glow" id="btnSyncTabCopyUrl" title="نسخ الرابط">
+                    <span>📋</span>
+                    <span data-i18n="btn_copy">نسخ</span>
+                  </button>
+                  <button type="button" class="tool-btn hover-glow" id="btnSyncTabOpenBrowser" title="فتح في المتصفح">
+                    <span>🌐</span>
+                    <span data-i18n="btn_open">فتح</span>
+                  </button>
+                  <button type="button" class="tool-btn hover-glow" id="btnSyncTabPing" title="فحص استجابة السيرفر">
+                    <span>📶</span>
+                    <span id="syncPingBtnText" data-i18n="btn_ping">فحص</span>
+                  </button>
+                </div>
+                <div id="syncPingFeedback" class="sync-ping-feedback hidden"></div>
+              </div>
+
+              <!-- 1-Tap ZIP Download for iPhone Files App -->
+              <div class="sync-zip-action-row">
+                <button type="button" class="primary-btn pulse-glow sync-zip-btn" id="btnSyncTabDownloadZip">
+                  <span>📦</span>
+                  <span data-i18n="btn_download_zip_all">تحميل كل الأغاني ملف مضغوط (ZIP للآيفون)</span>
+                </button>
+                <p class="sync-zip-hint" data-i18n="sync_zip_hint">
+                  يتم حفظه في مجلد التنزيلات وتطبيقات الآيفون (Files app) وفك ضغطه بنقرة واحدة بدون كمبيوتر.
+                </p>
+              </div>
+
+              <!-- 3-Step Guide -->
+              <div class="sync-guide-card">
+                <h4 class="sync-guide-title" data-i18n="sync_guide_title">خطوات الاستخدام على الآيفون 📱:</h4>
+                <div class="sync-guide-steps">
+                  <div class="guide-step">
+                    <span class="step-num">1</span>
+                    <div class="step-body">
+                      <strong data-i18n="step1_title">الاتصال بنفس الشبكة:</strong>
+                      <span data-i18n="step1_desc">تأكد أن الآيفون والكمبيوتر متصلان بنفس شبكة الـ Wi-Fi المنزلية.</span>
+                    </div>
+                  </div>
+                  <div class="guide-step">
+                    <span class="step-num">2</span>
+                    <div class="step-body">
+                      <strong data-i18n="step2_title">مسح كود الـ QR:</strong>
+                      <span data-i18n="step2_desc">افتح كاميرا الآيفون الافتراضية ووجّهها إلى الكود أعلاه، ثم اضغط على الرابط الأصفر للفتح في Safari.</span>
+                    </div>
+                  </div>
+                  <div class="guide-step">
+                    <span class="step-num">3</span>
+                    <div class="step-body">
+                      <strong data-i18n="step3_title">التشغيل أو الحفظ:</strong>
+                      <span data-i18n="step3_desc">استمتع بتشغيل الأغاني في الخلفية مع قفل الشاشة، أو اضغط "تحميل ZIP" لنقل كل التراكات إلى تطبيق "الملفات" (Files).</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- COLUMN 2: Apple Music Playlists + Finder Sync -->
+            <div class="sync-col-right">
+
+              <!-- Subcard 1: Apple Music & Playlists -->
+              <div class="card glass-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <span class="card-title-icon">🍎</span>
+                    <div>
+                      <h3 class="card-title" data-i18n="sync_apple_music_title">مزامنة Apple Music وبلاي ليست مخصصة</h3>
+                      <p class="card-subtitle" data-i18n="sync_apple_music_subtitle">إضافة الأغاني مباشرة إلى تطبيق الموسيقى مع إنشاء قائمة تشغيل باسمك</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="sync-form-group">
+                  <label for="tabSyncPlaylistName" class="input-label" data-i18n="sync_playlist_label">
+                    <span>🏷️</span>
+                    <span>اسم قائمة التشغيل (Playlist Name):</span>
+                  </label>
+                  <input type="text" id="tabSyncPlaylistName" class="input-control glowing-focus" value="Mazekty" placeholder="مثال: Mazekty Top Hits">
+                  
+                  <!-- Quick suggestion tags -->
+                  <div class="quick-tags-row">
+                    <span class="tags-label" data-i18n="quick_tags">اقتراحات سريعة:</span>
+                    <button type="button" class="quick-tag-chip" data-name="Mazekty">Mazekty</button>
+                    <button type="button" class="quick-tag-chip" data-name="Favorites">Favorites</button>
+                    <button type="button" class="quick-tag-chip" data-name="Workout & Gym">Workout & Gym</button>
+                    <button type="button" class="quick-tag-chip" data-name="Car Audio">Car Audio</button>
+                    <button type="button" class="quick-tag-chip" data-name="Chill Vibes">Chill Vibes</button>
+                  </div>
+                </div>
+
+                <!-- Sync All Button -->
+                <div class="sync-action-block">
+                  <button type="button" class="primary-btn hover-glow w-100" id="btnTabSyncAllMusic">
+                    <span>🎶</span>
+                    <span data-i18n="btn_sync_all_playlist">مزامنة كل المكتبة وإنشاء قائمة التشغيل</span>
+                  </button>
+                </div>
+
+                <!-- Single Track Sync -->
+                <div class="sync-single-track-box">
+                  <label for="tabSyncSingleFileSelect" class="input-label" data-i18n="sync_single_track_label">
+                    <span>🎵</span>
+                    <span>أو اختر تراكاً محدداً لمزامنته فقط:</span>
+                  </label>
+                  <div class="sync-single-controls">
+                    <select id="tabSyncSingleFileSelect" class="select-control flex-1">
+                      <option value="" data-i18n="select_file_placeholder">-- اختر ملفاً صوتياً --</option>
+                    </select>
+                    <button type="button" class="tool-btn hover-glow" id="btnTabSyncSingleMusic">
+                      <span>➕</span>
+                      <span data-i18n="btn_sync_single">مزامنة التراك</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div id="tabSyncMusicFeedback" class="sync-feedback-box hidden"></div>
+              </div>
+
+              <!-- Subcard 2: Hardware Finder USB Sync -->
+              <div class="card glass-card">
+                <div class="card-header">
+                  <div class="card-title-group">
+                    <span class="card-title-icon">🔌</span>
+                    <div>
+                      <h3 class="card-title" data-i18n="sync_finder_title">مزامنة الكابل السلكية (Apple Finder Sync)</h3>
+                      <p class="card-subtitle" data-i18n="sync_finder_subtitle">كشف ومزامنة أجهزة iPhone و iPad المتصلة عبر USB</p>
+                    </div>
+                  </div>
+                  <button type="button" class="tool-btn hover-glow" id="btnTabRefreshDevices" title="إعادة فحص الأجهزة">
+                    <span>🔄</span>
+                    <span data-i18n="btn_scan_devices">فحص الأجهزة</span>
+                  </button>
+                </div>
+
+                <div id="tabSyncDevicesContainer" class="sync-devices-container">
+                  <div class="sync-device-card placeholder">
+                    <span class="device-icon">🔍</span>
+                    <div class="device-info">
+                      <strong data-i18n="checking_devices">جاري فحص اتصال أجهزة أبل عبر USB...</strong>
+                      <span data-i18n="connect_cable_hint">قم بتوصيل الآيفون بكابل Lightning أو Type-C لتفعيله.</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="sync-finder-action-row">
+                  <button type="button" class="tool-btn hover-glow w-100" id="btnTabSyncFinderAction">
+                    <span>📂</span>
+                    <span data-i18n="btn_open_finder_sync">فتح شاشة مزامنة الآيفون في Finder (macOS)</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        <!-- VIEW 6: SETTINGS (Enhanced with Themes, Accent Colors, Platform badge) -->
+        <section class="view-panel" id="view-settings">
+          <div class="card glass-card">
+            <h3 class="card-title mb-4">
+              <span>⚙️</span>
+              <span data-i18n="nav_settings">إعدادات مزيكتي</span>
+            </h3>
+
+            <div class="settings-list">
+              <!-- Setting: Save Folder -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_folder_title">مجلد حفظ التنزيلات الدائم</div>
+                  <div class="setting-desc" data-i18n="setting_folder_desc">يتم تذكر هذا المجلد دائماً ولن يتغير عند إغلاق التطبيق.</div>
+                </div>
+                <div class="setting-control-wrap">
+                  <input type="text" id="settingsFolderInput" class="text-control" value="downloads" dir="ltr" />
+                  <button type="button" class="btn-secondary hover-glow" id="btnSettingsBrowseFolder">
+                    📁 <span data-i18n="btn_browse_folder">اختيار مجلد</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Setting: Theme Mode [NEW FREE] -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_theme_mode">مظهر الواجهة (Theme Mode)</div>
+                  <div class="setting-desc" data-i18n="setting_theme_mode_desc">اختر مظهر الواجهة المفضل (زجاجي داكن، أسود OLED، أو فاتح عصري).</div>
+                </div>
+                <div class="setting-control-wrap">
+                  <select id="settingsThemeModeSelect" class="select-control">
+                    <option value="dark" selected>🌌 Dark Glass (الزجاجي الداكن الافتراضي)</option>
+                    <option value="oled">🖤 OLED Black (أسود نقي لشاشات ريتينا)</option>
+                    <option value="light">☀️ Light Modern (الفاتح العصري)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Setting: Accent Color [NEW FREE] -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_accent_title">لون الإضاءة الرئيسي (Accent Color)</div>
+                  <div class="setting-desc" data-i18n="setting_accent_desc">خصص لون الأزرار والتوهج داخل التطبيق.</div>
+                </div>
+                <div class="setting-control-wrap">
+                  <div class="accent-color-picker">
+                    <button type="button" class="color-dot active" data-color="violet" style="background:#6366f1;" title="Violet"></button>
+                    <button type="button" class="color-dot" data-color="blue" style="background:#3b82f6;" title="Blue"></button>
+                    <button type="button" class="color-dot" data-color="emerald" style="background:#10b981;" title="Emerald"></button>
+                    <button type="button" class="color-dot" data-color="rose" style="background:#f43f5e;" title="Rose"></button>
+                    <button type="button" class="color-dot" data-color="amber" style="background:#f59e0b;" title="Amber"></button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Setting: Language -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_lang_title">لغة التطبيق (App Language)</div>
+                  <div class="setting-desc" data-i18n="setting_lang_desc">اختر اللغة المفضلة للواجهة.</div>
+                </div>
+                <div class="setting-control-wrap">
+                  <select id="settingsLangSelect" class="select-control">
+                    <option value="en">English (US / UK)</option>
+                    <option value="ar">العربية (Arabic)</option>
+                    <option value="es">Español (Spanish)</option>
+                    <option value="fr">Français (French)</option>
+                    <option value="de">Deutsch (German)</option>
+                    <option value="tr">Türkçe (Turkish)</option>
+                    <option value="pt">Português (Portuguese)</option>
+                    <option value="ru">Русский (Russian)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Setting: OS & Environment Status -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_os_title">نظام التشغيل والبيئة (Platform)</div>
+                  <div class="setting-desc" data-i18n="setting_os_desc">نظام التشغيل المكتشف ومحرك المعالجة الداخلي.</div>
+                </div>
+                <div class="setting-control-wrap">
+                  <span class="pro-status-active" id="osBadgeLabel"> macOS | 100% Local FFmpeg</span>
+                </div>
+              </div>
+
+              <!-- Setting: Pro Status -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name">ترخيص مزيكتي برو (Mazekty PRO)</div>
+                  <div class="setting-desc">حالة الميزات الاحترافية مفعلة بشكل دائم ومجاني 100%.</div>
+                </div>
+                <div class="setting-control-wrap">
+                  <span class="pro-status-active">✓ مُفعل ونشط مدى الحياة</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Persistent Floating Bottom Music Player -->
+  <footer class="bottom-player-bar glass-player hidden" id="playerWidget">
+    <div class="player-left-info">
+      <div class="player-cover-icon">🎵</div>
+      <div class="player-text-wrap">
+        <span class="player-title" id="nowPlayingTitle">-</span>
+        <div class="mini-equalizer playing" id="playerEqualizer">
+          <span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="player-center-controls">
+      <audio id="globalAudioPlayer" controls class="native-audio-player"></audio>
+    </div>
+
+    <div class="player-right-actions">
+      <button type="button" class="btn-player-action hover-lift" id="btnPlayerAppleSync" title="إضافة لتطبيق Music">🍎</button>
+      <button type="button" class="btn-player-action hover-lift" id="btnPlayerClose" title="إغلاق المشغل">✕</button>
+    </div>
+  </footer>
+
+  <!-- MODAL: ID3 TAG EDITOR [NEW FREE] -->
+  <div class="modal-overlay hidden" id="tagModalOverlay">
+    <div class="modal-dialog glass-card">
+      <div class="modal-header">
+        <h3 class="modal-title">🏷️ <span data-i18n="tag_editor_title">محرر وسوم ومعلومات الأغنية (ID3 Tags)</span></h3>
+        <button type="button" class="tool-btn" id="btnCloseTagModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="tagEditFilename" />
+        <div class="form-group mb-2">
+          <label class="form-label" data-i18n="tag_title_label">عنوان الأغنية (Title):</label>
+          <input type="text" id="tagTitleInput" class="text-control" dir="auto" />
+        </div>
+        <div class="form-group mb-2">
+          <label class="form-label" data-i18n="tag_artist_label">اسم الفنان (Artist):</label>
+          <input type="text" id="tagArtistInput" class="text-control" dir="auto" />
+        </div>
+        <div class="form-group mb-2">
+          <label class="form-label" data-i18n="tag_album_label">الألبوم (Album):</label>
+          <input type="text" id="tagAlbumInput" class="text-control" dir="auto" />
+        </div>
+        <div class="row-2-inputs">
+          <div class="form-group mb-2 flex-1">
+            <label class="form-label" data-i18n="tag_year_label">السنة (Year):</label>
+            <input type="text" id="tagYearInput" class="text-control" dir="ltr" />
+          </div>
+          <div class="form-group mb-2 flex-1">
+            <label class="form-label" data-i18n="tag_genre_label">النوع (Genre):</label>
+            <input type="text" id="tagGenreInput" class="text-control" dir="auto" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btnCancelTagEdit" data-i18n="btn_cancel">إلغاء</button>
+        <button type="button" class="btn-action btn-download" id="btnSaveTagEdit" data-i18n="btn_save_tags">حفظ التعديلات في الملف ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SCHEDULED DOWNLOAD [NEW PRO] -->
+  <div class="modal-overlay hidden" id="scheduleModalOverlay">
+    <div class="modal-dialog glass-card">
+      <div class="modal-header">
+        <h3 class="modal-title">⏰ <span data-i18n="schedule_modal_title">جدولة التنزيل التلقائي</span></h3>
+        <button type="button" class="tool-btn" id="btnCloseScheduleModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="hint-text mb-3" data-i18n="schedule_desc">حدد بعد كم دقيقة تريد أن يبدأ التطبيق بتحميل الروابط المكتوبة في خانة التنزيل (مفيد للتحميل الليلي وتوفير الباقة):</p>
+        <div class="form-group mb-2">
+          <label class="form-label" data-i18n="schedule_delay_label">البدء بعد (بالدقائق):</label>
+          <input type="number" id="scheduleDelayMinutes" class="text-control" value="60" min="1" max="1440" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" id="btnCancelSchedule" data-i18n="btn_cancel">إلغاء</button>
+        <button type="button" class="btn-action btn-schedule" id="btnConfirmSchedule" data-i18n="btn_confirm_schedule">تأكيد الجدولة ⏰</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: MOBILE AIRSYNC & QR CODE [NEW] -->
+  <div class="modal-overlay hidden" id="mobileModalOverlay">
+    <div class="modal-dialog glass-card" style="max-width: 480px; text-align: center;">
+      <div class="modal-header">
+        <h3 class="modal-title">📱 <span data-i18n="mobile_sync_modal_title">مزامنة ونقل الأغاني للآيفون والموبايل</span></h3>
+        <button type="button" class="tool-btn" id="btnCloseMobileModal">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="hint-text mb-3" data-i18n="mobile_sync_hint">امسح رمز الـ QR بكاميرا الآيفون لنقل وتشغيل البلاي ليست فوراً عبر نفس شبكة الواي فاي:</p>
+        
+        <div id="qrcodeContainer" style="background:#fff; padding:16px; border-radius:16px; display:inline-block; margin: 10px auto; box-shadow: 0 8px 24px rgba(0,0,0,0.4);"></div>
+
+        <div class="mt-3">
+          <label class="form-label" data-i18n="mobile_url_label">أو افتح هذا الرابط مباشرة من متصفح سفاري (Safari):</label>
+          <div style="display:flex; gap:8px; margin-top:6px;">
+            <input type="text" id="mobileUrlInput" class="text-control" readonly dir="ltr" style="text-align:center; font-weight:700;" />
+            <button type="button" class="tool-btn highlight" id="btnCopyMobileUrl">📋 نسخ</button>
+          </div>
+        </div>
+
+        <div class="mt-3" style="text-align: right; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; font-size: 0.82rem; color: var(--text-secondary); line-height: 1.6;">
+          <div>✓ <strong>الخطوة 1:</strong> افتح كاميرا الآيفون وامسح الرمز.</div>
+          <div>✓ <strong>الخطوة 2:</strong> ستفتح صفحة البلاي ليست في Safari.</div>
+          <div>✓ <strong>الخطوة 3:</strong> اضغط "تحميل الكل ZIP" لتنتقل الأغاني لتطبيق Files بالآيفون، أو شغّل البلاي ليست في الخلفية!</div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: center;">
+        <button type="button" class="btn-action btn-secondary" id="btnDoneMobileModal">تم الإغلاق ✓</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/qrcode.min.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>

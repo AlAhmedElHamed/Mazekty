@@ -24,6 +24,9 @@ from platform_utils import (
     get_local_ip,
     get_all_local_ips,
     detect_connected_ios_devices,
+    detect_connected_android_devices,
+    detect_all_connected_mobile_devices,
+    sync_to_android_device,
     trigger_finder_ios_sync
 )
 
@@ -372,6 +375,12 @@ class SyncMusicRequest(BaseModel):
 class SyncAllRequest(BaseModel):
     folder: Optional[str] = None
     playlist_name: Optional[str] = "Mazekty"
+
+class SyncAndroidRequest(BaseModel):
+    device_id: Optional[str] = None
+    playlist_name: Optional[str] = "Mazekty"
+    folder: Optional[str] = None
+    files: Optional[List[str]] = None
 
 class OpenFolderRequest(BaseModel):
     folder: Optional[str] = None
@@ -857,16 +866,44 @@ async def download_mobile_zip(folder: Optional[str] = None):
 
 @app.get("/api/sync/devices")
 async def get_connected_devices():
-    """Detects iOS devices (iPhone, iPad) connected to computer via USB."""
+    """Detects both iOS (iPhone/iPad) and Android mobile devices connected via USB."""
     loop = asyncio.get_running_loop()
-    devices = await loop.run_in_executor(None, detect_connected_ios_devices)
-    return {"devices": devices, "count": len(devices)}
+    devices = await loop.run_in_executor(None, detect_all_connected_mobile_devices)
+    ios_count = sum(1 for d in devices if d.get("platform") == "ios")
+    android_count = sum(1 for d in devices if d.get("platform") == "android")
+    return {
+        "devices": devices,
+        "count": len(devices),
+        "ios_count": ios_count,
+        "android_count": android_count
+    }
 
 @app.post("/api/sync/trigger-ios")
 async def trigger_ios_sync_endpoint():
     """Triggers Finder sync for connected iOS devices on macOS."""
     loop = asyncio.get_running_loop()
     res = await loop.run_in_executor(None, trigger_finder_ios_sync)
+    return res
+
+@app.post("/api/sync/trigger-android")
+async def trigger_android_sync_endpoint(req: Optional[SyncAndroidRequest] = None):
+    """Syncs songs directly to connected Android device via ADB."""
+    loop = asyncio.get_running_loop()
+    dev_id = req.device_id if req else None
+    playlist = req.playlist_name if (req and req.playlist_name) else "Mazekty"
+    target_folder = (req.folder if req and req.folder else None) or DEFAULT_DOWNLOAD_DIR
+
+    file_list = None
+    if req and req.files:
+        file_list = [os.path.join(target_folder, f) if not os.path.isabs(f) else f for f in req.files]
+    else:
+        if os.path.exists(target_folder):
+            file_list = [
+                os.path.join(target_folder, f) for f in os.listdir(target_folder)
+                if f.lower().endswith(('.mp3', '.m4a', '.flac', '.wav', '.mp4'))
+            ]
+
+    res = await loop.run_in_executor(None, lambda: sync_to_android_device(dev_id, file_list, playlist))
     return res
 
 @app.post("/api/analyze")

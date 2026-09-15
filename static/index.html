@@ -639,9 +639,9 @@
                 <span class="sync-hero-pulse"></span>
               </div>
               <div class="sync-hero-text">
-                <h3 class="sync-hero-title" data-i18n="sync_hero_title">مركز النقل والمزامنة لأجهزة الآيفون وأبل</h3>
+                <h3 class="sync-hero-title" data-i18n="sync_hero_title">Mobile Transfer & Sync Hub (Apple & Android)</h3>
                 <p class="sync-hero-desc" data-i18n="sync_hero_desc">
-                  نظام مزامنة متطور بدون أي اشتراكات أو أطراف خارجية: بث لاسلكي فوري عبر QR Code وشبكة Wi-Fi، إنشاء وتصدير قوائم التشغيل (Playlists)، والمزامنة السلكية مع Apple Music و Finder.
+                  Advanced zero-subscription offline sync engine: instant wireless AirSync QR streaming, custom playlist creator, and wired USB sync for both iPhone and Android.
                 </p>
               </div>
             </div>
@@ -830,13 +830,13 @@
                   <div class="card-title-group">
                     <span class="card-title-icon">🔌</span>
                     <div>
-                      <h3 class="card-title" data-i18n="sync_finder_title">مزامنة الكابل السلكية (Apple Finder Sync)</h3>
-                      <p class="card-subtitle" data-i18n="sync_finder_subtitle">كشف ومزامنة أجهزة iPhone و iPad المتصلة عبر USB</p>
+                      <h3 class="card-title" data-i18n="sync_finder_title">Wired USB Mobile Sync (Apple & Android)</h3>
+                      <p class="card-subtitle" data-i18n="sync_finder_subtitle">Auto-detects iPhone, iPad & Android devices connected via USB-C</p>
                     </div>
                   </div>
-                  <button type="button" class="tool-btn hover-glow" id="btnTabRefreshDevices" title="إعادة فحص الأجهزة">
+                  <button type="button" class="tool-btn hover-glow" id="btnTabRefreshDevices" title="Refresh Devices">
                     <span>🔄</span>
-                    <span data-i18n="btn_scan_devices">فحص الأجهزة</span>
+                    <span data-i18n="btn_scan_devices">Scan Devices</span>
                   </button>
                 </div>
 
@@ -844,16 +844,20 @@
                   <div class="sync-device-card placeholder">
                     <span class="device-icon">🔍</span>
                     <div class="device-info">
-                      <strong data-i18n="checking_devices">جاري فحص اتصال أجهزة أبل عبر USB...</strong>
-                      <span data-i18n="connect_cable_hint">قم بتوصيل الآيفون بكابل Lightning أو Type-C لتفعيله.</span>
+                      <strong data-i18n="checking_devices">Scanning for connected Apple & Android devices...</strong>
+                      <span data-i18n="connect_cable_hint">Connect your phone via USB-C or Lightning cable to sync music directly.</span>
                     </div>
                   </div>
                 </div>
 
-                <div class="sync-finder-action-row">
-                  <button type="button" class="tool-btn hover-glow w-100" id="btnTabSyncFinderAction">
-                    <span>📂</span>
-                    <span data-i18n="btn_open_finder_sync">فتح شاشة مزامنة الآيفون في Finder (macOS)</span>
+                <div class="sync-finder-action-row" style="display: flex; gap: 8px;">
+                  <button type="button" class="tool-btn hover-glow flex-1" id="btnTabSyncFinderAction">
+                    <span></span>
+                    <span data-i18n="btn_open_finder_sync">Apple Finder Sync</span>
+                  </button>
+                  <button type="button" class="primary-btn hover-glow flex-1" id="btnTabSyncAndroidAction">
+                    <span>🤖</span>
+                    <span data-i18n="btn_sync_android_quick">Sync to Android</span>
                   </button>
                 </div>
               </div>

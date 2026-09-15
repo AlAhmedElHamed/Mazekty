@@ -313,11 +313,14 @@ def detect_connected_ios_devices() -> List[Dict[str, Any]]:
 
                 model_name = IPHONE_MODEL_MAP.get(product_type, f"Apple {dev_name}")
                 devices.append({
+                    "id": serial or dev_id,
                     "name": dev_name,
                     "model": model_name,
                     "product_type": product_type,
                     "ios_version": ios_version,
                     "serial": serial,
+                    "platform": "ios",
+                    "icon": "🍏",
                     "connection": conn_type,
                     "manufacturer": "Apple Inc.",
                     "status": "connected"
@@ -329,35 +332,340 @@ def detect_connected_ios_devices() -> List[Dict[str, Any]]:
     if devices:
         return devices
 
-    # 2. Fallback to system_profiler SPUSBDataType
+    # 2. Fallback to system_profiler SPUSBHostDataType & SPUSBDataType
     if CURRENT_OS == "Darwin":
+        import json
+        for dt in ["SPUSBHostDataType", "SPUSBDataType"]:
+            try:
+                p = subprocess.run(["system_profiler", dt, "-json"], capture_output=True, text=True, timeout=5)
+                if p.returncode == 0:
+                    data = json.loads(p.stdout)
+                    def find_apple_devs(node):
+                        if isinstance(node, list):
+                            for x in node: find_apple_devs(x)
+                        elif isinstance(node, dict):
+                            name = node.get("_name", "")
+                            mfg = node.get("USBDeviceKeyVendorName", "") or node.get("manufacturer", "")
+                            if any(k in name.lower() for k in ["iphone", "ipad", "ipod"]):
+                                serial = node.get("USBDeviceKeySerialNumber", "") or node.get("serial_num", "")
+                                if serial == "Not Provided": serial = ""
+                                devices.append({
+                                    "id": serial or name,
+                                    "name": name,
+                                    "model": name,
+                                    "serial": serial,
+                                    "platform": "ios",
+                                    "icon": "🍏",
+                                    "manufacturer": mfg or "Apple Inc.",
+                                    "connection": "USB-C / Lightning",
+                                    "status": "connected"
+                                })
+                            for k in ["_items", "_subitems"]:
+                                if k in node: find_apple_devs(node[k])
+                            for v in node.values():
+                                if isinstance(v, (list, dict)):
+                                    find_apple_devs(v)
+                    find_apple_devs(data)
+                    if devices:
+                        break
+            except Exception:
+                pass
+
+    return devices
+
+ANDROID_VENDORS = {
+    "0x18d1": "Google",
+    "0x04e8": "Samsung",
+    "0x2717": "Xiaomi",
+    "0x12d1": "Huawei",
+    "0x22d9": "OnePlus / OPPO",
+    "0x2d95": "Vivo",
+    "0x22b8": "Motorola",
+    "0x1004": "LG",
+    "0x0fce": "Sony",
+    "0x0bb4": "HTC",
+    "0x0b05": "ASUS",
+    "0x0e8d": "MediaTek",
+    "0x17ef": "Lenovo",
+    "0x2a70": "Transsion",
+    "0x05c6": "Qualcomm",
+    "0x1782": "Unisoc",
+    "0x19d2": "ZTE"
+}
+
+ANDROID_KEYWORDS = [
+    "android", "galaxy", "pixel", "redmi", "xiaomi", "poco", "huawei", "honor",
+    "oneplus", "oppo", "vivo", "realme", "motorola", "moto ", "sony xperia",
+    "xperia", "infinix", "tecno", "itel", "nexus", "samsung"
+]
+
+def find_adb_executable() -> Optional[str]:
+    import shutil
+    found = shutil.which("adb")
+    if found:
+        return found
+    candidates = [
+        os.path.expanduser("~/Library/Android/sdk/platform-tools/adb"),
+        "/opt/homebrew/bin/adb",
+        "/usr/local/bin/adb",
+        "C:\\Android\\platform-tools\\adb.exe",
+        os.path.expandvars("%LOCALAPPDATA%\\Android\\Sdk\\platform-tools\\adb.exe"),
+        os.path.expandvars("%PROGRAMFILES%\\Android\\platform-tools\\adb.exe"),
+        "/usr/bin/adb",
+        "/snap/bin/adb"
+    ]
+    for c in candidates:
+        if os.path.exists(c) and os.access(c, os.X_OK):
+            return c
+    return None
+
+def detect_connected_android_devices() -> List[Dict[str, Any]]:
+    """
+    Detects Android smartphones & tablets connected via USB.
+    1. Fast ADB query (adb devices -l) with support for model extraction & direct push
+    2. Native OS hardware bus query (macOS SPUSBHostDataType/SPUSBDataType, Windows PnP, Linux lsusb)
+    """
+    devices: List[Dict[str, Any]] = []
+    seen_serials = set()
+
+    # 1. Fast ADB query
+    adb_bin = find_adb_executable()
+    if adb_bin:
         try:
-            import json
-            p = subprocess.run(["system_profiler", "SPUSBDataType", "-json"], capture_output=True, text=True, timeout=5)
+            p = subprocess.run([adb_bin, "devices", "-l"], capture_output=True, text=True, timeout=2.0)
+            lines = p.stdout.strip().splitlines()
+            for line in lines[1:]:
+                line = line.strip()
+                if not line:
+                    continue
+                parts = line.split()
+                serial = parts[0]
+                state = parts[1] if len(parts) > 1 else "unknown"
+                seen_serials.add(serial.lower())
+
+                model = ""
+                product = ""
+                device_code = ""
+                for item in parts[2:]:
+                    if item.startswith("model:"):
+                        model = item.split(":", 1)[1].replace("_", " ")
+                    elif item.startswith("product:"):
+                        product = item.split(":", 1)[1]
+                    elif item.startswith("device:"):
+                        device_code = item.split(":", 1)[1]
+
+                display_name = model or product or device_code or f"Android Device ({serial})"
+                brand = "Android"
+                for kw in ["Samsung", "Pixel", "Xiaomi", "Redmi", "POCO", "Huawei", "OnePlus", "Oppo", "Vivo", "Realme", "Motorola", "Sony"]:
+                    if kw.lower() in display_name.lower():
+                        brand = kw
+                        break
+
+                devices.append({
+                    "id": serial,
+                    "name": display_name,
+                    "model": display_name,
+                    "platform": "android",
+                    "icon": "🤖",
+                    "os": "Android",
+                    "manufacturer": brand,
+                    "serial": serial,
+                    "connection": "USB-C / Cable",
+                    "status": "connected" if state == "device" else state,
+                    "can_adb_sync": (state == "device")
+                })
+        except Exception:
+            pass
+
+    # 2. Native hardware detection
+    if CURRENT_OS == "Darwin":
+        import json
+        for dt in ["SPUSBHostDataType", "SPUSBDataType"]:
+            try:
+                p = subprocess.run(["system_profiler", dt, "-json"], capture_output=True, text=True, timeout=4)
+                if p.returncode == 0:
+                    data = json.loads(p.stdout)
+                    def traverse(node):
+                        if isinstance(node, list):
+                            for item in node: traverse(item)
+                        elif isinstance(node, dict):
+                            name = node.get("_name", "")
+                            vendor_name = node.get("USBDeviceKeyVendorName", "") or node.get("manufacturer", "")
+                            vendor_id = (node.get("USBDeviceKeyVendorID", "") or "").lower()
+                            serial = node.get("USBDeviceKeySerialNumber", "") or node.get("serial_num", "")
+                            if serial == "Not Provided":
+                                serial = ""
+
+                            is_android = False
+                            brand = ""
+                            if vendor_id in ANDROID_VENDORS:
+                                is_android = True
+                                brand = ANDROID_VENDORS[vendor_id]
+                            else:
+                                combined = f"{name} {vendor_name}".lower()
+                                for kw in ANDROID_KEYWORDS:
+                                    if kw in combined:
+                                        is_android = True
+                                        brand = vendor_name or kw.capitalize()
+                                        break
+
+                            if is_android and not any(ign in name.lower() for ign in ["hub", "receiver", "soundbar", "mouse", "keyboard", "apple", "iphone", "ipad"]):
+                                if not serial or serial.lower() not in seen_serials:
+                                    display_name = name if name not in ["Unnamed Device", "Android"] else f"{brand} Android Device"
+                                    devices.append({
+                                        "id": serial or name,
+                                        "name": display_name,
+                                        "model": display_name,
+                                        "platform": "android",
+                                        "icon": "🤖",
+                                        "os": "Android",
+                                        "manufacturer": brand or vendor_name or "Android",
+                                        "serial": serial,
+                                        "connection": "USB-C / Cable",
+                                        "status": "connected",
+                                        "can_adb_sync": False
+                                    })
+                                    if serial:
+                                        seen_serials.add(serial.lower())
+
+                            for k in ["_items", "_subitems"]:
+                                if k in node: traverse(node[k])
+                            for v in node.values():
+                                if isinstance(v, (list, dict)):
+                                    traverse(v)
+                    traverse(data)
+                    if devices:
+                        break
+            except Exception:
+                pass
+    elif CURRENT_OS == "Windows":
+        try:
+            ps_cmd = 'Get-PnpDevice -Class "WPD","USB" -Status "OK" | Select-Object -ExpandProperty FriendlyName'
+            p = subprocess.run(["powershell", "-NoProfile", "-Command", ps_cmd], capture_output=True, text=True, timeout=4)
             if p.returncode == 0:
-                data = json.loads(p.stdout)
-                def find_apple_devs(node):
-                    if isinstance(node, list):
-                        for x in node: find_apple_devs(x)
-                    elif isinstance(node, dict):
-                        name = node.get("_name", "")
-                        if any(k in name.lower() for k in ["iphone", "ipad", "ipod"]):
+                for line in p.stdout.splitlines():
+                    line = line.strip()
+                    if not line: continue
+                    for kw in ANDROID_KEYWORDS:
+                        if kw in line.lower() and not any(ign in line.lower() for ign in ["hub", "controller", "mouse", "keyboard"]):
                             devices.append({
+                                "id": line,
+                                "name": line,
+                                "model": line,
+                                "platform": "android",
+                                "icon": "🤖",
+                                "os": "Android",
+                                "manufacturer": "Android",
+                                "serial": "",
+                                "connection": "USB Cable",
+                                "status": "connected",
+                                "can_adb_sync": False
+                            })
+                            break
+        except Exception:
+            pass
+    elif CURRENT_OS == "Linux":
+        try:
+            p = subprocess.run(["lsusb"], capture_output=True, text=True, timeout=3)
+            if p.returncode == 0:
+                for line in p.stdout.splitlines():
+                    for kw in ANDROID_KEYWORDS:
+                        if kw in line.lower():
+                            parts = line.split(":", 2)
+                            name = parts[-1].strip() if len(parts) > 2 else line
+                            devices.append({
+                                "id": name,
                                 "name": name,
                                 "model": name,
-                                "serial": node.get("serial_num", ""),
-                                "manufacturer": node.get("manufacturer", "Apple Inc."),
-                                "connection": "USB",
-                                "status": "connected"
+                                "platform": "android",
+                                "icon": "🤖",
+                                "os": "Android",
+                                "manufacturer": "Android",
+                                "serial": "",
+                                "connection": "USB Cable",
+                                "status": "connected",
+                                "can_adb_sync": False
                             })
-                        for v in node.values():
-                            if isinstance(v, (list, dict)):
-                                find_apple_devs(v)
-                find_apple_devs(data)
+                            break
         except Exception:
             pass
 
     return devices
+
+def detect_all_connected_mobile_devices() -> List[Dict[str, Any]]:
+    """Detects both iOS (iPhone/iPad) and Android smartphones."""
+    ios_devs = detect_connected_ios_devices()
+    android_devs = detect_connected_android_devices()
+    return ios_devs + android_devs
+
+def sync_to_android_device(device_id: Optional[str] = None, file_paths: Optional[List[str]] = None, playlist_name: str = "Mazekty") -> Dict[str, Any]:
+    """
+    Syncs selected tracks or entire downloaded playlist to connected Android device.
+    Uses ADB push directly to /sdcard/Music/{playlist_name}/ and requests media scan.
+    """
+    adb_bin = find_adb_executable()
+    if not adb_bin:
+        return {
+            "success": False,
+            "message": "محرك ADB غير متوفر لنقل الكابل المباشر. يمكنك استخدام AirSync اللاسلكي أعلاه للتحميل الفوري على الأندرويد!"
+        }
+
+    target_id = device_id
+    if not target_id:
+        devs = detect_connected_android_devices()
+        adb_devs = [d for d in devs if d.get("can_adb_sync")]
+        if not adb_devs:
+            if devs:
+                return {
+                    "success": False,
+                    "requires_auth": True,
+                    "message": "تم كشف هاتف الأندرويد، ولكن يرجى تفعيل 'تصحيح أخطاء USB' (USB Debugging) في إعدادات المطور بالهاتف لتفعيل النقل المباشر، أو استخدم AirSync."
+                }
+            return {
+                "success": False,
+                "message": "لم يتم العثور على هاتف أندرويد متصل. تأكد من توصيل الكابل واختيار 'نقل الملفات'."
+            }
+        target_id = adb_devs[0]["id"]
+
+    target_files = file_paths
+    if not target_files:
+        from downloader import DOWNLOAD_DIR
+        target_files = [
+            os.path.join(DOWNLOAD_DIR, f) for f in os.listdir(DOWNLOAD_DIR)
+            if f.lower().endswith(('.mp3', '.m4a', '.flac', '.wav', '.mp4'))
+        ]
+
+    if not target_files:
+        return {"success": False, "message": "لا توجد ملفات صوتية لتحميلها. قم بتحميل بعض المقاطع أولاً!"}
+
+    clean_playlist = re.sub(r'[^\w\s-]', '', playlist_name).strip() or "Mazekty"
+    remote_dir = f"/sdcard/Music/{clean_playlist}"
+
+    try:
+        subprocess.run([adb_bin, "-s", target_id, "shell", "mkdir", "-p", remote_dir], capture_output=True, timeout=5)
+
+        synced = 0
+        for fpath in target_files:
+            if os.path.isfile(fpath):
+                fname = os.path.basename(fpath)
+                p = subprocess.run([adb_bin, "-s", target_id, "push", fpath, f"{remote_dir}/{fname}"], capture_output=True, text=True, timeout=30)
+                if p.returncode == 0:
+                    synced += 1
+                    subprocess.run([
+                        adb_bin, "-s", target_id, "shell", "am", "broadcast",
+                        "-a", "android.intent.action.MEDIA_SCANNER_SCAN_FILE",
+                        "-d", f"file://{remote_dir}/{fname}"
+                    ], capture_output=True, timeout=5)
+
+        return {
+            "success": True,
+            "synced_count": synced,
+            "playlist": clean_playlist,
+            "destination": remote_dir,
+            "message": f"تم نقل {synced} مقطع صوتي بنجاح إلى مجلد Music/{clean_playlist} على هاتف الأندرويد!"
+        }
+    except Exception as e:
+        return {"success": False, "message": f"خطأ أثناء النقل للأندرويد: {str(e)}"}
 
 def trigger_finder_ios_sync() -> Dict[str, Any]:
     """Initiates device sync on macOS with connected iPhone/iPad."""

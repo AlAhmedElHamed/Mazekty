@@ -148,14 +148,14 @@ const i18n = {
     "schedule_delay_label": "Start after (Minutes):",
     "btn_confirm_schedule": "Confirm Schedule ⏰",
     "nav_sync": "Transfer & Sync",
-    "sync_hero_title": "Apple & iPhone Sync Center",
+    "sync_hero_title": "Mobile Transfer & Sync Hub (Apple & Android)",
     "sync_hero_desc": "Advanced zero-cloud sync: Instant AirSync wireless streaming via QR Code, custom Apple Music playlist creation, and hardware Finder USB sync.",
     "sync_airsync_title": "Instant Wireless AirSync (QR Code)",
     "sync_airsync_subtitle": "Scan QR code with iPhone camera to launch native Safari player & downloader",
     "sync_apple_music_title": "Apple Music & Playlist Sync",
     "sync_apple_music_subtitle": "Sync tracks directly into Apple Music library and generate custom playlists",
-    "sync_finder_title": "Hardware USB Cable Sync (macOS Finder)",
-    "sync_finder_subtitle": "Detect and sync connected iPhones and iPads via USB",
+    "sync_finder_title": "Wired USB Mobile Sync (Apple & Android)",
+    "sync_finder_subtitle": "Auto-detects iPhone, iPad & Android devices connected via USB-C / Cable",
     "sync_network_adapter": "Network Interface / LAN IP:",
     "btn_download_zip_all": "Download All as ZIP (iPhone Files App)",
     "sync_zip_hint": "Saved to iOS Files app (Downloads) and extracted in 1-tap with zero computer tethering.",
@@ -173,9 +173,10 @@ const i18n = {
     "select_file_placeholder": "-- Select an audio file --",
     "btn_sync_single": "Sync Track",
     "btn_scan_devices": "Scan Devices",
-    "checking_devices": "Scanning for Apple devices via USB...",
-    "connect_cable_hint": "Connect iPhone via Lightning or Type-C cable to activate.",
-    "btn_open_finder_sync": "Open iPhone Device Sync in Finder (macOS)",
+    "checking_devices": "Scanning for connected Apple & Android devices...",
+    "connect_cable_hint": "Connect your phone via USB-C or Lightning cable to sync music directly.",
+    "btn_open_finder_sync": "Apple Finder Sync",
+    "btn_sync_android_quick": "Sync to Android",
     "btn_goto_sync_tab": "Open Dedicated Sync & Transfer Tab 📱",
     "btn_copy": "Copy",
     "btn_open": "Open",
@@ -316,14 +317,14 @@ const i18n = {
     "schedule_delay_label": "البدء بعد (بالدقائق):",
     "btn_confirm_schedule": "تأكيد الجدولة ⏰",
     "nav_sync": "النقل والمزامنة",
-    "sync_hero_title": "مركز النقل والمزامنة لأجهزة الآيفون وأبل",
+    "sync_hero_title": "مركز النقل والمزامنة للهواتف (آيفون وأندرويد)",
     "sync_hero_desc": "نظام مزامنة متطور بدون أي اشتراكات أو أطراف خارجية: بث لاسلكي فوري عبر QR Code وشبكة Wi-Fi، إنشاء وتصدير قوائم التشغيل (Playlists)، والمزامنة السلكية مع Apple Music و Finder.",
     "sync_airsync_title": "المزامنة اللاسلكية الفورية (AirSync QR Code)",
     "sync_airsync_subtitle": "امسح الكود بكاميرا الآيفون لفتح المشغل والمحمل المخصص لـ Safari فوراً",
     "sync_apple_music_title": "مزامنة Apple Music وبلاي ليست مخصصة",
     "sync_apple_music_subtitle": "إضافة الأغاني مباشرة إلى تطبيق الموسيقى مع إنشاء قائمة تشغيل باسمك",
-    "sync_finder_title": "مزامنة الكابل السلكية (Apple Finder Sync)",
-    "sync_finder_subtitle": "كشف ومزامنة أجهزة iPhone و iPad المتصلة عبر USB",
+    "sync_finder_title": "المزامنة السلكية عبر كابل USB (أبل وأندرويد)",
+    "sync_finder_subtitle": "كشف ومزامنة أجهزة الآيفون والأندرويد المتصلة عبر كابل Type-C",
     "sync_network_adapter": "عنوان الشبكة / Network IP:",
     "btn_download_zip_all": "تحميل كل الأغاني ملف مضغوط (ZIP للآيفون)",
     "sync_zip_hint": "يتم حفظه في مجلد التنزيلات وتطبيقات الآيفون (Files app) وفك ضغطه بنقرة واحدة بدون كمبيوتر.",
@@ -341,9 +342,10 @@ const i18n = {
     "select_file_placeholder": "-- اختر ملفاً صوتياً --",
     "btn_sync_single": "مزامنة التراك",
     "btn_scan_devices": "فحص الأجهزة",
-    "checking_devices": "جاري فحص اتصال أجهزة أبل عبر USB...",
-    "connect_cable_hint": "قم بتوصيل الآيفون بكابل Lightning أو Type-C لتفعيله.",
-    "btn_open_finder_sync": "فتح شاشة مزامنة الآيفون في Finder (macOS)",
+    "checking_devices": "جاري فحص اتصال أجهزة أبل وأندرويد عبر USB...",
+    "connect_cable_hint": "قم بتوصيل هاتفك بكابل Type-C أو Lightning لنقل الموسيقى مباشرة.",
+    "btn_open_finder_sync": "مزامنة الآيفون (Finder)",
+    "btn_sync_android_quick": "نقل للأندرويد",
     "btn_goto_sync_tab": "فتح لوحة النقل والمزامنة المستقلة 📱",
     "btn_copy": "نسخ",
     "btn_open": "فتح",
@@ -484,7 +486,7 @@ const i18n = {
     "schedule_desc": "Minutos hasta iniciar la descarga automáticamente:",
     "schedule_delay_label": "Iniciar en (minutos):",
     "btn_confirm_schedule": "Confirmar ⏰",
-    "sync_hero_title": "Centro de sincronización Apple y iPhone",
+    "sync_hero_title": "Centro de transferencia y sincronización (iOS y Android)",
     "sync_hero_desc": "Transmisión inalámbrica AirSync por QR, listas de Apple Music y sincronización USB por Finder.",
     "sync_airsync_title": "AirSync Inalámbrico Instantáneo (QR)",
     "sync_airsync_subtitle": "Escanea con la cámara del iPhone para abrir el reproductor en Safari",
@@ -652,7 +654,7 @@ const i18n = {
     "schedule_desc": "Délai en minutes avant le démarrage automatique :",
     "schedule_delay_label": "Démarrer après (minutes) :",
     "btn_confirm_schedule": "Confirmer ⏰",
-    "sync_hero_title": "Centre de synchronisation Apple & iPhone",
+    "sync_hero_title": "Centre de transfert et synchronisation (iOS et Android)",
     "sync_hero_desc": "AirSync sans fil par QR code, création de playlists Apple Music et synchronisation Finder USB.",
     "sync_airsync_title": "AirSync sans fil instantané (QR Code)",
     "sync_airsync_subtitle": "Scannez avec l'appareil photo de l'iPhone pour lancer le lecteur Safari",
@@ -820,7 +822,7 @@ const i18n = {
     "schedule_desc": "Zeit in Minuten bis zum automatischen Start:",
     "schedule_delay_label": "Start nach (Minuten):",
     "btn_confirm_schedule": "Bestätigen ⏰",
-    "sync_hero_title": "Apple & iPhone Synchronisierungscenter",
+    "sync_hero_title": "Mobiles Übertragungs- & Sync-Center (iOS & Android)",
     "sync_hero_desc": "Drahtloses AirSync via QR-Code, Apple Music Playlists und Finder USB-Sync.",
     "sync_airsync_title": "Drahtloses AirSync (QR-Code)",
     "sync_airsync_subtitle": "Mit iPhone-Kamera scannen für Safari-Player & Downloader",
@@ -988,7 +990,7 @@ const i18n = {
     "schedule_desc": "İndirmenin kaç dakika sonra başlayacağını belirtin:",
     "schedule_delay_label": "Başlama süresi (Dakika):",
     "btn_confirm_schedule": "Zamanlamayı Onayla ⏰",
-    "sync_hero_title": "Apple ve iPhone Eşitleme Merkezi",
+    "sync_hero_title": "Mobil Aktarım ve Eşitleme Merkezi (iOS ve Android)",
     "sync_hero_desc": "QR kod ile kablosuz AirSync, Apple Music listeleri ve Finder USB eşitlemesi.",
     "sync_airsync_title": "Anında Kablosuz AirSync (QR Kod)",
     "sync_airsync_subtitle": "Safari oynatıcısını açmak için iPhone kamerasıyla taratın",
@@ -1013,7 +1015,7 @@ const i18n = {
     "select_file_placeholder": "-- Dosya seçin --",
     "btn_sync_single": "Parçayı Eşitle",
     "btn_scan_devices": "Cihazları Tara",
-    "checking_devices": "USB üzerinden Apple cihazları taranıyor...",
+    "checking_devices": "USB üzerinden Apple ve Android cihazlar taranıyor...",
     "connect_cable_hint": "iPhone'unuzu Lightning veya Type-C kablosuyla bağlayın.",
     "btn_open_finder_sync": "Finder'da iPhone Eşitlemesini Aç",
     "btn_goto_sync_tab": "Aktarım ve Eşitleme Sekmesini Aç 📱",
@@ -1156,7 +1158,7 @@ const i18n = {
     "schedule_desc": "Minutos até iniciar o download automaticamente:",
     "schedule_delay_label": "Iniciar após (minutos):",
     "btn_confirm_schedule": "Confirmar ⏰",
-    "sync_hero_title": "Central de sincronização Apple e iPhone",
+    "sync_hero_title": "Central de transferência e sincronização (iOS e Android)",
     "sync_hero_desc": "Transmissão sem fio AirSync via QR, playlists Apple Music e sincronização USB Finder.",
     "sync_airsync_title": "AirSync sem fio instantâneo (QR Code)",
     "sync_airsync_subtitle": "Escaneie com a câmera do iPhone para abrir o reprodutor no Safari",
@@ -1324,7 +1326,7 @@ const i18n = {
     "schedule_desc": "Через сколько минут начать автоматическую загрузку:",
     "schedule_delay_label": "Запуск через (минут):",
     "btn_confirm_schedule": "Подтвердить ⏰",
-    "sync_hero_title": "Центр синхронизации Apple и iPhone",
+    "sync_hero_title": "Центр передачи и синхронизации (iOS и Android)",
     "sync_hero_desc": "Беспроводной AirSync по QR-коду, плейлисты Apple Music и синхронизация по кабелю в Finder.",
     "sync_airsync_title": "Мгновенный беспроводной AirSync (QR-код)",
     "sync_airsync_subtitle": "Наведите камеру iPhone для запуска плеера в Safari",
@@ -3265,11 +3267,18 @@ async function refreshSyncDevices() {
 
     if (syncUsbStatusText && syncUsbDot) {
       if (devices.length > 0) {
-        const topDev = devices[0];
-        syncUsbStatusText.textContent = `Apple: ${topDev.model || topDev.name} متصل ✓`;
+        const iosDevs = devices.filter(d => d.platform === 'ios');
+        const androidDevs = devices.filter(d => d.platform === 'android');
+        if (iosDevs.length > 0 && androidDevs.length > 0) {
+          syncUsbStatusText.textContent = `USB: 🍏 Apple (${iosDevs.length}) + 🤖 Android (${androidDevs.length}) ✓`;
+        } else if (androidDevs.length > 0) {
+          syncUsbStatusText.textContent = `Android: ${androidDevs[0].model || androidDevs[0].name} ✓`;
+        } else {
+          syncUsbStatusText.textContent = `Apple: ${iosDevs[0].model || iosDevs[0].name} ✓`;
+        }
         syncUsbDot.className = 'pill-dot active';
       } else {
-        syncUsbStatusText.textContent = `USB: لا يوجد جهاز متصل`;
+        syncUsbStatusText.textContent = currentLang === 'ar' ? 'USB: لا يوجد جهاز متصل' : 'USB: No device connected';
         syncUsbDot.className = 'pill-dot';
       }
     }
@@ -3277,26 +3286,42 @@ async function refreshSyncDevices() {
     tabSyncDevicesContainer.innerHTML = '';
     if (devices.length > 0) {
       devices.forEach(d => {
+        const isAndroid = d.platform === 'android';
+        const icon = isAndroid ? '🤖' : '🍏';
+        const isAdb = isAndroid && d.can_adb_sync;
         const div = document.createElement('div');
         div.className = 'sync-device-card connected';
+
+        const platformDesc = isAndroid
+          ? `${d.manufacturer || 'Android'} ${d.serial ? `• SN: ${d.serial}` : ''} • USB-C Cable ${isAdb ? '(ADB Active ✓)' : '(USB MTP ✓)'}`
+          : `${d.manufacturer || 'Apple Inc.'} ${d.serial ? `• SN: ${d.serial}` : ''} • USB-C / Lightning Cable ✓`;
+
+        const btnText = isAndroid
+          ? (currentLang === 'ar' ? 'نقل لهاتف الأندرويد' : 'Sync to Android')
+          : (currentLang === 'ar' ? 'مزامنة مع Apple Music' : 'Sync to Apple Music');
+
         div.innerHTML = `
-          <span class="device-icon">📱</span>
+          <span class="device-icon">${icon}</span>
           <div class="device-info flex-1">
             <strong>${d.model || d.name} ${d.ios_version ? `(${d.ios_version})` : ''}</strong>
-            <span>${d.manufacturer || 'Apple Inc.'} ${d.serial ? `• السيريال: ${d.serial}` : ''} • متصل عبر كابل Type-C / اتصال مباشر ✓</span>
+            <span>${platformDesc}</span>
           </div>
           <button type="button" class="primary-btn hover-glow sync-device-now-btn" style="padding: 8px 14px; font-size: 0.82rem; white-space: nowrap;">
             <span>⚡</span>
-            <span>نقل وبدء المزامنة</span>
+            <span>${btnText}</span>
           </button>
         `;
         const actionBtn = div.querySelector('.sync-device-now-btn');
         if (actionBtn) {
           actionBtn.addEventListener('click', () => {
-            if (btnTabSyncAllMusic) btnTabSyncAllMusic.click();
-            setTimeout(() => {
-              if (btnTabSyncFinderAction) btnTabSyncFinderAction.click();
-            }, 1200);
+            if (isAndroid) {
+              syncToAndroidDevice(d.id);
+            } else {
+              if (btnTabSyncAllMusic) btnTabSyncAllMusic.click();
+              setTimeout(() => {
+                if (btnTabSyncFinderAction) btnTabSyncFinderAction.click();
+              }, 1200);
+            }
           });
         }
         tabSyncDevicesContainer.appendChild(div);
@@ -3306,8 +3331,8 @@ async function refreshSyncDevices() {
         <div class="sync-device-card placeholder">
           <span class="device-icon">🔌</span>
           <div class="device-info">
-            <strong>لم يتم كشف جهاز iPhone/iPad متصل عبر كابل Type-C</strong>
-            <span>قم بتوصيل الهاتف بالكمبيوتر بكابل واضغط "وثوق بهذا الكمبيوتر" على شاشة الآيفون، أو استخدم AirSync اللاسلكي أعلاه.</span>
+            <strong>${currentLang === 'ar' ? 'لم يتم كشف هاتف (iPhone أو Android) متصل عبر كابل' : 'No iPhone or Android phone detected via USB cable'}</strong>
+            <span>${currentLang === 'ar' ? 'قم بتوصيل هاتفك بالكمبيوتر بكابل واضغط "سماح / وثوق"، أو استخدم AirSync اللاسلكي أعلاه للمزامنة بدون أسلاك.' : 'Connect your phone with a USB cable and tap "Trust / Allow", or use AirSync wireless above.'}</span>
           </div>
         </div>
       `;
@@ -3315,6 +3340,57 @@ async function refreshSyncDevices() {
   } catch (e) {
     console.error('Device scan error:', e);
   }
+}
+
+async function syncToAndroidDevice(deviceId) {
+  playUiSound('pop');
+  const playlistInput = document.getElementById('tabSyncPlaylistName');
+  const playlistName = playlistInput ? playlistInput.value.trim() : 'Mazekty';
+  const feedbackEl = document.getElementById('tabSyncMusicFeedback');
+  if (feedbackEl) {
+    feedbackEl.className = 'sync-feedback-box info';
+    feedbackEl.textContent = currentLang === 'ar'
+      ? '⏳ جاري فحص ونقل المقاطع الصوتية إلى هاتف الأندرويد...'
+      : '⏳ Syncing audio tracks to connected Android device...';
+    feedbackEl.classList.remove('hidden');
+  }
+  try {
+    const res = await fetch('/api/sync/trigger-android', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ device_id: deviceId, playlist_name: playlistName })
+    });
+    const data = await res.json();
+    if (data.success) {
+      playUiSound('success');
+      if (feedbackEl) {
+        feedbackEl.className = 'sync-feedback-box success';
+        feedbackEl.textContent = `✓ ${data.message}`;
+      }
+      alert(`🤖 Android Sync:\n${data.message}`);
+    } else {
+      playUiSound('error');
+      if (feedbackEl) {
+        feedbackEl.className = 'sync-feedback-box error';
+        feedbackEl.textContent = `⚠️ ${data.message}`;
+      }
+      alert(`⚠️ Android Sync:\n${data.message}`);
+    }
+  } catch (err) {
+    playUiSound('error');
+    if (feedbackEl) {
+      feedbackEl.className = 'sync-feedback-box error';
+      feedbackEl.textContent = `⚠️ Error: ${err.message}`;
+    }
+    alert(`⚠️ Android Sync Error: ${err.message}`);
+  }
+}
+
+const btnTabSyncAndroidAction = document.getElementById('btnTabSyncAndroidAction');
+if (btnTabSyncAndroidAction) {
+  btnTabSyncAndroidAction.addEventListener('click', () => {
+    syncToAndroidDevice(null);
+  });
 }
 
 // Auto-poll connected devices periodically when on sync tab

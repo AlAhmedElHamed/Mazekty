@@ -38,6 +38,7 @@ ehthumbs.db
 *.log
 *.tmp
 mazekty_linux_dist/
+scratch/
 mazekty_win_dist/
 bin/
 *.lnk

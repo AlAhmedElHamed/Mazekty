@@ -1,6 +1,6 @@
 ; Inno Setup Script for Mazekty Pro
 #define MyAppName "Mazekty Pro"
-#define MyAppVersion "1.5.2"
+#define MyAppVersion "1.5.3"
 #define MyAppPublisher "Mazekty Media"
 #define MyAppURL "https://github.com/alahmedelhamed/mazekty"
 #define MyAppExeName "Mazekty.exe"

@@ -5512,24 +5512,29 @@ function handleUpdateDownloadedEvent(msg) {
   if (btnManualUpdateText) btnManualUpdateText.textContent = restartBtnText;
   if (btnUpdateCta) {
     btnUpdateCta.disabled = false;
-    btnUpdateCta.onclick = applyUpdateNow;
+    btnUpdateCta.onclick = () => { applyUpdateNow(); };
   }
   if (btnManualUpdate) {
     btnManualUpdate.disabled = false;
-    btnManualUpdate.onclick = applyUpdateNow;
+    btnManualUpdate.onclick = () => { applyUpdateNow(); };
   }
   if (updateStatusHint) {
-    updateStatusHint.textContent = readySub;
+    updateStatusHint.textContent = currentLang === 'ar' ? 'اضغط على زر إعادة التشغيل لتطبيق التحديث الآن.' : 'Click Restart to apply update now.';
     updateStatusHint.style.color = '#10b981';
   }
-
-  // Automatically apply update after 1.5 seconds!
-  setTimeout(() => {
-    applyUpdateNow();
-  }, 1500);
 }
 
+let isApplyingUpdate = false;
+
 async function applyUpdateNow() {
+  if (isApplyingUpdate) return;
+  isApplyingUpdate = true;
+
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  const btnManualUpdate = document.getElementById('btnManualUpdate');
+  if (btnUpdateCta) btnUpdateCta.disabled = true;
+  if (btnManualUpdate) btnManualUpdate.disabled = true;
+
   const updateStatusHint = document.getElementById('updateStatusHint');
   const bannerSub = document.getElementById('updateBannerSub');
   const msg = currentLang === 'ar' ? 'جاري إغلاق التطبيق وتطبيق التحديث...' : 'Applying update and restarting...';

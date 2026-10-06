@@ -1391,7 +1391,7 @@ async def delete_cookies_api():
 # AUTO-UPDATE ENGINE (GITHUB RELEASES)
 # ==========================================
 
-APP_VERSION = "1.5.2"
+APP_VERSION = "1.5.3"
 GITHUB_REPO = "AlAhmedElHamed/Mazekty"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
@@ -1596,23 +1596,33 @@ async def start_update_download_worker():
 
 @app.post("/api/update/apply")
 async def apply_update_api():
+    if update_state.get("applying"):
+        return {"status": "restarting", "message": "جاري تثبيت التحديث بالفعل..."}
+
     installer = update_state.get("installer_path")
     if not installer or not os.path.isfile(installer):
         raise HTTPException(status_code=400, detail="ملف التحديث غير موجود، يرجى التنزيل أولاً")
 
+    update_state["applying"] = True
+
     os_name = get_os_name().lower()
     if "windows" in os_name or "win" in os_name:
-        runner_cmd = os.path.join(tempfile.gettempdir(), "Mazekty_Update", "apply_update.cmd")
+        runner_dir = os.path.join(tempfile.gettempdir(), "Mazekty_Update")
+        os.makedirs(runner_dir, exist_ok=True)
+        runner_cmd = os.path.join(runner_dir, "apply_update.cmd")
         current_exe = os.path.abspath(sys.executable) if getattr(sys, 'frozen', False) else ""
         
         if installer.lower().endswith(".zip"):
             app_dir = os.path.dirname(current_exe) if current_exe else os.path.abspath(".")
-            extracted_dir = os.path.join(tempfile.gettempdir(), "Mazekty_Update", "extracted")
+            extracted_dir = os.path.join(runner_dir, "extracted")
             cmd_script = f"""@echo off
-ping 127.0.0.1 -n 3 >nul
+setlocal
+timeout /t 2 /nobreak >nul 2>&1
+taskkill /F /IM Mazekty.exe >nul 2>&1
+timeout /t 1 /nobreak >nul 2>&1
 powershell -Command "Expand-Archive -Path '{installer}' -DestinationPath '{extracted_dir}' -Force"
 xcopy /E /Y /I "{extracted_dir}\\Mazekty\\*" "{app_dir}"
-ping 127.0.0.1 -n 2 >nul
+timeout /t 2 /nobreak >nul 2>&1
 if exist "{current_exe}" (
     start "" "{current_exe}"
 )
@@ -1620,9 +1630,12 @@ exit
 """
         else:
             cmd_script = f"""@echo off
-ping 127.0.0.1 -n 3 >nul
-"{installer}" /SILENT /SP- /CLOSEAPPLICATIONS
-ping 127.0.0.1 -n 2 >nul
+setlocal
+timeout /t 2 /nobreak >nul 2>&1
+taskkill /F /IM Mazekty.exe >nul 2>&1
+timeout /t 1 /nobreak >nul 2>&1
+start /wait "" "{installer}" /SILENT /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS
+timeout /t 2 /nobreak >nul 2>&1
 if exist "{current_exe}" (
     start "" "{current_exe}"
 ) else if exist "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe" (
@@ -1634,10 +1647,13 @@ exit
 """
         with open(runner_cmd, "w", encoding="utf-8") as f:
             f.write(cmd_script)
+
+        # CREATE_NO_WINDOW (0x08000000) prevents black cmd popups
+        flags = 0x08000000 | getattr(subprocess, "DETACHED_PROCESS", 0x00000008) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
         subprocess.Popen(
             f'cmd.exe /c "{runner_cmd}"',
             shell=True,
-            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0x00000008) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
+            creationflags=flags
         )
     elif "mac" in os_name or "darwin" in os_name:
         subprocess.Popen(["open", installer])

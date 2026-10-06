@@ -1,11 +1,15 @@
 import os
 import sys
+import re
 import time
 import json
 import uuid
 import asyncio
 import subprocess
 import traceback
+import tempfile
+import urllib.request
+import urllib.parse
 from collections import defaultdict
 from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
@@ -18,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from downloader import YouTubeDownloader
 from platform_utils import (
     get_config_path,
+    get_cookies_path,
     get_user_data_dir,
     get_default_download_dir,
     open_folder_in_explorer,
@@ -42,6 +47,7 @@ async def lifespan(app_instance: FastAPI):
     queue_resume_event.set()
     main_event_loop = asyncio.get_running_loop()
     queue_worker_task = asyncio.create_task(queue_worker())
+    asyncio.create_task(background_update_checker())
     yield
     if queue_worker_task:
         queue_worker_task.cancel()
@@ -1330,6 +1336,335 @@ async def get_audio_file(filename: str, folder: Optional[str] = None):
 
     return FileResponse(file_path, media_type=media_type, filename=filename)
 
+# ==========================================
+# COOKIES MANAGEMENT (BYPASS YOUTUBE BOT CHALLENGE)
+# ==========================================
+
+@app.get("/api/cookies/status")
+async def get_cookies_status_api():
+    cookie_file = get_cookies_path()
+    has_cookies = os.path.isfile(cookie_file) and os.path.getsize(cookie_file) > 10
+    size = os.path.getsize(cookie_file) if has_cookies else 0
+    return {
+        "enabled": has_cookies,
+        "size_bytes": size,
+        "size_kb": round(size / 1024, 1),
+        "path": cookie_file
+    }
+
+@app.post("/api/cookies/upload")
+async def upload_cookies_api(file: Optional[UploadFile] = File(None), raw_text: Optional[str] = Form(None)):
+    cookie_file = get_cookies_path()
+    content = ""
+    if file:
+        content_bytes = await file.read()
+        content = content_bytes.decode("utf-8", errors="ignore")
+    elif raw_text:
+        content = raw_text
+
+    if not content or not content.strip():
+        raise HTTPException(status_code=400, detail="محتوى الكوكيز فارغ")
+
+    try:
+        with open(cookie_file, "w", encoding="utf-8") as f:
+            f.write(content.strip() + "\n")
+        return {
+            "success": True,
+            "message": "تم حفظ الكوكيز بنجاح وتفعيلها لجميع التحميلات!",
+            "size_kb": round(len(content) / 1024, 1)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"تعذر حفظ الكوكيز: {e}")
+
+@app.post("/api/cookies/delete")
+async def delete_cookies_api():
+    cookie_file = get_cookies_path()
+    if os.path.exists(cookie_file):
+        try:
+            os.remove(cookie_file)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"تعذر حذف الكوكيز: {e}")
+    return {"success": True, "message": "تم حذف الكوكيز بنجاح"}
+
+
+# ==========================================
+# AUTO-UPDATE ENGINE (GITHUB RELEASES)
+# ==========================================
+
+APP_VERSION = "1.5.1"
+GITHUB_REPO = "AlAhmedElHamed/Mazekty"
+GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
+
+update_state: Dict[str, Any] = {
+    "status": "idle",
+    "percent": 0.0,
+    "downloaded_mb": 0.0,
+    "total_mb": 0.0,
+    "speed": "",
+    "eta": "",
+    "latest_version": "",
+    "release_title": "",
+    "release_notes": "",
+    "asset_name": "",
+    "asset_size": 0,
+    "download_url": "",
+    "installer_path": "",
+    "error": None
+}
+
+def parse_semver(v: str) -> tuple:
+    cleaned = re.sub(r'^[vV]', '', str(v).strip())
+    parts = []
+    for p in re.split(r'[.-]', cleaned):
+        if p.isdigit():
+            parts.append(int(p))
+    return tuple(parts)
+
+def fetch_latest_github_release() -> Optional[Dict[str, Any]]:
+    try:
+        req = urllib.request.Request(
+            GITHUB_RELEASES_API,
+            headers={
+                "User-Agent": f"Mazekty-Pro/{APP_VERSION}",
+                "Accept": "application/vnd.github.v3+json"
+            }
+        )
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data
+    except Exception as err:
+        print(f"Error checking GitHub releases: {err}")
+        return None
+
+def find_platform_asset(assets: List[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    os_name = get_os_name().lower()
+    if "windows" in os_name or "win" in os_name:
+        for a in assets:
+            if a.get("name") == "Mazekty_Windows_Setup.exe":
+                return a
+        for a in assets:
+            if a.get("name", "").endswith(".exe"):
+                return a
+        for a in assets:
+            if a.get("name") == "Mazekty-Windows-Portable.zip":
+                return a
+    elif "mac" in os_name or "darwin" in os_name:
+        for a in assets:
+            if a.get("name", "").endswith(".dmg"):
+                return a
+    elif "linux" in os_name:
+        for a in assets:
+            if a.get("name", "").endswith(".tar.gz"):
+                return a
+    return assets[0] if assets else None
+
+@app.get("/api/update/check")
+async def check_update_api():
+    loop = asyncio.get_running_loop()
+    release_data = await loop.run_in_executor(None, fetch_latest_github_release)
+    if not release_data:
+        return {
+            "update_available": False,
+            "current_version": APP_VERSION,
+            "message": "تعذر التحقق من التحديثات عبر GitHub حالياً"
+        }
+
+    tag_name = release_data.get("tag_name", "").lstrip("vV")
+    latest_version = tag_name
+    curr_v = parse_semver(APP_VERSION)
+    latest_v = parse_semver(latest_version)
+
+    is_newer = (latest_v > curr_v)
+    asset = find_platform_asset(release_data.get("assets", []))
+
+    result = {
+        "update_available": is_newer,
+        "current_version": APP_VERSION,
+        "latest_version": latest_version,
+        "release_title": release_data.get("name") or f"Mazekty Pro v{latest_version}",
+        "release_notes": release_data.get("body") or "",
+        "published_at": release_data.get("published_at"),
+        "asset_name": asset.get("name") if asset else None,
+        "asset_size": asset.get("size") if asset else 0,
+        "download_url": asset.get("browser_download_url") if asset else None
+    }
+
+    if is_newer and asset:
+        update_state.update({
+            "status": "available",
+            "latest_version": latest_version,
+            "release_title": result["release_title"],
+            "release_notes": result["release_notes"],
+            "asset_name": asset.get("name"),
+            "asset_size": asset.get("size"),
+            "download_url": asset.get("browser_download_url")
+        })
+
+    return result
+
+@app.post("/api/update/download")
+async def download_update_api(background_tasks: BackgroundTasks):
+    if update_state.get("status") == "downloading":
+        return {"status": "downloading", "message": "جاري التحميل بالفعل"}
+
+    if not update_state.get("download_url"):
+        check_res = await check_update_api()
+        if not check_res.get("download_url"):
+            raise HTTPException(status_code=400, detail="لا يوجد ملف تحديث متاح للتنزيل")
+
+    background_tasks.add_task(start_update_download_worker)
+    return {"status": "started", "message": "بدأ تحميل التحديث في الخلفية"}
+
+async def start_update_download_worker():
+    download_url = update_state.get("download_url")
+    asset_name = update_state.get("asset_name") or "Mazekty_Update.exe"
+
+    update_dir = os.path.join(tempfile.gettempdir(), "Mazekty_Update")
+    os.makedirs(update_dir, exist_ok=True)
+    target_path = os.path.join(update_dir, asset_name)
+
+    update_state["status"] = "downloading"
+    update_state["percent"] = 0.0
+    update_state["installer_path"] = target_path
+    update_state["error"] = None
+
+    try:
+        loop = asyncio.get_running_loop()
+        def _download():
+            req = urllib.request.Request(download_url, headers={"User-Agent": f"Mazekty-Pro/{APP_VERSION}"})
+            with urllib.request.urlopen(req, timeout=60) as resp:
+                total = int(resp.headers.get("content-length", 0))
+                downloaded = 0
+                start_t = time.time()
+                last_time = 0
+
+                with open(target_path, "wb") as f_out:
+                    while True:
+                        chunk = resp.read(64 * 1024)
+                        if not chunk:
+                            break
+                        f_out.write(chunk)
+                        downloaded += len(chunk)
+
+                        now = time.time()
+                        if now - last_time > 0.25:
+                            last_time = now
+                            elapsed = now - start_t
+                            speed_bps = downloaded / elapsed if elapsed > 0 else 0
+                            speed_str = f"{speed_bps / (1024 * 1024):.1f} MB/s" if speed_bps > 1024 * 1024 else f"{speed_bps / 1024:.0f} KB/s"
+                            pct = round((downloaded / total * 100), 1) if total > 0 else 0
+                            dl_mb = round(downloaded / (1024 * 1024), 1)
+                            tot_mb = round(total / (1024 * 1024), 1)
+
+                            update_state.update({
+                                "percent": pct,
+                                "downloaded_mb": dl_mb,
+                                "total_mb": tot_mb,
+                                "speed": speed_str
+                            })
+
+                            if main_event_loop and main_event_loop.is_running():
+                                asyncio.run_coroutine_threadsafe(
+                                    manager.broadcast({
+                                        "event": "update_progress",
+                                        "percent": pct,
+                                        "downloaded_mb": dl_mb,
+                                        "total_mb": tot_mb,
+                                        "speed": speed_str
+                                    }),
+                                    main_event_loop
+                                )
+                return target_path
+
+        final_file = await loop.run_in_executor(None, _download)
+        update_state["status"] = "downloaded"
+        update_state["percent"] = 100.0
+        update_state["installer_path"] = final_file
+
+        await manager.broadcast({
+            "event": "update_downloaded",
+            "installer_path": final_file,
+            "latest_version": update_state.get("latest_version")
+        })
+    except Exception as e:
+        update_state["status"] = "error"
+        update_state["error"] = str(e)
+        await manager.broadcast({
+            "event": "update_error",
+            "error": str(e)
+        })
+
+@app.post("/api/update/apply")
+async def apply_update_api():
+    installer = update_state.get("installer_path")
+    if not installer or not os.path.isfile(installer):
+        raise HTTPException(status_code=400, detail="ملف التحديث غير موجود، يرجى التنزيل أولاً")
+
+    os_name = get_os_name().lower()
+    if "windows" in os_name or "win" in os_name:
+        runner_cmd = os.path.join(tempfile.gettempdir(), "Mazekty_Update", "apply_update.cmd")
+        current_exe = os.path.abspath(sys.executable) if getattr(sys, 'frozen', False) else ""
+        
+        if installer.lower().endswith(".zip"):
+            app_dir = os.path.dirname(current_exe) if current_exe else os.path.abspath(".")
+            extracted_dir = os.path.join(tempfile.gettempdir(), "Mazekty_Update", "extracted")
+            cmd_script = f"""@echo off
+ping 127.0.0.1 -n 3 >nul
+powershell -Command "Expand-Archive -Path '{installer}' -DestinationPath '{extracted_dir}' -Force"
+xcopy /E /Y /I "{extracted_dir}\\Mazekty\\*" "{app_dir}"
+ping 127.0.0.1 -n 2 >nul
+if exist "{current_exe}" (
+    start "" "{current_exe}"
+)
+exit
+"""
+        else:
+            cmd_script = f"""@echo off
+ping 127.0.0.1 -n 3 >nul
+"{installer}" /SILENT /SP- /CLOSEAPPLICATIONS
+ping 127.0.0.1 -n 2 >nul
+if exist "{current_exe}" (
+    start "" "{current_exe}"
+) else if exist "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe" (
+    start "" "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe"
+) else if exist "%ProgramFiles%\\Mazekty\\Mazekty.exe" (
+    start "" "%ProgramFiles%\\Mazekty\\Mazekty.exe"
+)
+exit
+"""
+        with open(runner_cmd, "w", encoding="utf-8") as f:
+            f.write(cmd_script)
+        subprocess.Popen(
+            f'cmd.exe /c "{runner_cmd}"',
+            shell=True,
+            creationflags=getattr(subprocess, "DETACHED_PROCESS", 0x00000008) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
+        )
+    elif "mac" in os_name or "darwin" in os_name:
+        subprocess.Popen(["open", installer])
+    elif "linux" in os_name:
+        pass
+
+    asyncio.get_running_loop().call_later(0.8, lambda: os._exit(0))
+    return {"status": "restarting", "message": "جاري تثبيت التحديث وإعادة تشغيل مزيكتي برو..."}
+
+async def background_update_checker():
+    await asyncio.sleep(2.0)
+    try:
+        res = await check_update_api()
+        if res.get("update_available") and main_event_loop and main_event_loop.is_running():
+            await manager.broadcast({
+                "event": "update_available",
+                "current_version": res.get("current_version"),
+                "latest_version": res.get("latest_version"),
+                "release_title": res.get("release_title"),
+                "release_notes": res.get("release_notes"),
+                "asset_name": res.get("asset_name"),
+                "asset_size": res.get("asset_size"),
+                "download_url": res.get("download_url")
+            })
+    except Exception:
+        pass
+
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
@@ -1373,6 +1708,12 @@ async def websocket_endpoint(websocket: WebSocket):
                     await websocket.send_json({
                         "event": "stats_update",
                         "stats": session_stats
+                    })
+                elif action == "check_update":
+                    up_info = await check_update_api()
+                    await websocket.send_json({
+                        "event": "update_check_result",
+                        "data": up_info
                     })
                 else:
                     await websocket.send_json({

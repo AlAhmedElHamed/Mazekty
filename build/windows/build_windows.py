@@ -75,6 +75,7 @@ def main():
         "--collect-all=starlette",
         "--collect-all=mutagen",
         "--collect-all=yt_dlp",
+        "--collect-all=yt_dlp_ejs",
         f"--distpath={DIST_DIR}",
         f"--workpath={BUILD_DIR}",
         "--noconfirm",

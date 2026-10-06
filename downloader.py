@@ -18,7 +18,7 @@ try:
 except ImportError:
     mutagen = None
 
-from platform_utils import find_ffmpeg, sync_to_system_music_library, run_silent_cmd
+from platform_utils import find_ffmpeg, sync_to_system_music_library, run_silent_cmd, get_cookies_path
 
 FFMPEG_PATH = find_ffmpeg()
 
@@ -26,6 +26,19 @@ class YouTubeDownloader:
     def __init__(self, output_dir: str = "downloads"):
         self.output_dir = os.path.abspath(output_dir)
         os.makedirs(self.output_dir, exist_ok=True)
+
+    @staticmethod
+    def fetch_oembed_title(url: str) -> Optional[str]:
+        """Fetch video title using official YouTube oEmbed API without bot challenges."""
+        try:
+            clean_url = url.split('&')[0]
+            oembed_url = f"https://www.youtube.com/oembed?url={urllib.parse.quote(clean_url)}&format=json"
+            req = urllib.request.Request(oembed_url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode('utf-8'))
+                return data.get('title')
+        except Exception:
+            return None
 
     @staticmethod
     def normalize_url(url: str) -> str:
@@ -174,6 +187,10 @@ class YouTubeDownloader:
             'skip_download': True,
         }
 
+        cookie_file = get_cookies_path()
+        if os.path.isfile(cookie_file) and os.path.getsize(cookie_file) > 10:
+            ydl_opts['cookiefile'] = cookie_file
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             for url in urls:
                 # 1. Spotify & Apple Music Resolver
@@ -234,6 +251,20 @@ class YouTubeDownloader:
                             "uploader": info.get('uploader') or info.get('channel', '')
                         })
                 except Exception as err:
+                    err_str = str(err).lower()
+                    if "sign in to confirm" in err_str or "not a bot" in err_str or "cookies" in err_str:
+                        o_title = self.fetch_oembed_title(url)
+                        if o_title:
+                            resolved.append({
+                                "url": url,
+                                "title": o_title,
+                                "is_playlist": False,
+                                "is_channel": False,
+                                "duration": None,
+                                "thumbnail": None,
+                                "uploader": "YouTube"
+                            })
+                            continue
                     resolved.append({"url": url, "title": url, "is_playlist": False, "error": str(err)})
 
         return resolved
@@ -247,6 +278,10 @@ class YouTubeDownloader:
             'extract_flat': 'in_playlist',
             'skip_download': True,
         }
+        cookie_file = get_cookies_path()
+        if os.path.isfile(cookie_file) and os.path.getsize(cookie_file) > 10:
+            ydl_opts['cookiefile'] = cookie_file
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             # Check for Spotify / Apple Music
             if "open.spotify.com" in norm_url or "music.apple.com" in norm_url:
@@ -262,7 +297,25 @@ class YouTubeDownloader:
                         "url": norm_url
                     }
 
-            info = ydl.extract_info(norm_url, download=False)
+            try:
+                info = ydl.extract_info(norm_url, download=False)
+            except Exception as e:
+                err_str = str(e).lower()
+                if "sign in to confirm" in err_str or "not a bot" in err_str or "cookies" in err_str:
+                    o_title = self.fetch_oembed_title(norm_url)
+                    if o_title:
+                        return {
+                            "is_playlist": False,
+                            "is_channel": False,
+                            "id": norm_url.split("v=")[-1].split("&")[0] if "v=" in norm_url else "",
+                            "title": o_title,
+                            "duration": None,
+                            "thumbnail": None,
+                            "uploader": "YouTube",
+                            "url": norm_url
+                        }
+                raise e
+
             if not info:
                 raise ValueError("تعذر جلب معلومات هذا الرابط")
 
@@ -387,11 +440,34 @@ class YouTubeDownloader:
             pp_hooks.append(postprocessor_hook)
         ydl_opts['postprocessor_hooks'] = pp_hooks
 
+        cookie_file = get_cookies_path()
+        if os.path.isfile(cookie_file) and os.path.getsize(cookie_file) > 10:
+            ydl_opts['cookiefile'] = cookie_file
+
         try:
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 return info
         except Exception as first_err:
+            err_msg = str(first_err).lower()
+            # Handle YouTube bot challenge (Sign in to confirm you're not a bot)
+            if "sign in to confirm" in err_msg or "not a bot" in err_msg or "cookies" in err_msg:
+                o_title = self.fetch_oembed_title(url)
+                if o_title:
+                    try:
+                        fallback_search_opts = dict(ydl_opts)
+                        fallback_search_opts['noplaylist'] = True
+                        with yt_dlp.YoutubeDL(fallback_search_opts) as fallback_ydl:
+                            search_res = fallback_ydl.extract_info(f"ytsearch3:{o_title} audio", download=True)
+                            if search_res and 'entries' in search_res and search_res['entries']:
+                                return search_res['entries'][0]
+                    except Exception:
+                        pass
+                raise RuntimeError(
+                    "يتطلب هذا المقطع التحقق الأمني من يوتيوب (Sign in to confirm you're not a bot). "
+                    "يرجى استيراد كوكيز المتصفح (cookies.txt) من الإعدادات للتحميل بنجاح."
+                )
+
             # Smart Fallback: If custom format / high bitrate failed, fallback to standard MP3 192k
             if not is_video and (quality in ["320", "256"] or audio_format in ["flac", "wav", "m4a"]):
                 try:

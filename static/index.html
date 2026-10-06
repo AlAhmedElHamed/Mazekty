@@ -134,6 +134,28 @@
         <div class="top-progress-bar-fill" id="topProgressBarFill"></div>
       </div>
       
+      <!-- Floating Auto-Update Banner -->
+      <div class="update-banner hidden" id="updateBanner">
+        <div class="update-banner-inner">
+          <div class="update-banner-info">
+            <span class="update-icon">🚀</span>
+            <div class="update-text-col">
+              <strong class="update-title" id="updateBannerTitle" data-i18n="update_available_title">يتوفر إصدار جديد من مزيكتي!</strong>
+              <span class="update-sub" id="updateBannerSub">إصدار جديد متاح الآن للتحميل المباشر.</span>
+            </div>
+          </div>
+          <div class="update-banner-actions">
+            <button type="button" class="btn-update-cta" id="btnUpdateCta">
+              <span id="btnUpdateCtaText" data-i18n="btn_update_now">تحديث وتثبيت الآن</span>
+            </button>
+            <button type="button" class="btn-update-close" id="btnUpdateDismiss" title="إغلاق">✕</button>
+          </div>
+        </div>
+        <div class="update-progress-line hidden" id="updateProgressLine">
+          <div class="update-progress-fill" id="updateProgressFill"></div>
+        </div>
+      </div>
+
       <!-- Top Stage Bar -->
       <header class="stage-header">
         <div class="stage-title-wrap">
@@ -1131,6 +1153,55 @@
                 </div>
                 <div class="setting-control-wrap">
                   <span class="pro-status-active" data-i18n="setting_license_active">✓ مُفعل ونشط مدى الحياة</span>
+                </div>
+              </div>
+
+              <!-- Setting: Auto Updates -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_updates_title">تحديثات التطبيق التلقائية (Auto-Update)</div>
+                  <div class="setting-desc" id="settingUpdatesDesc" data-i18n="setting_updates_desc">التحقق التلقائي من تحديثات GitHub وتثبيتها بسلاسة دون فقدان إعداداتك.</div>
+                </div>
+                <div class="setting-control-wrap" style="flex-direction:column; align-items:flex-end; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="badge-index" id="currentVersionBadge">v1.5.0</span>
+                    <button type="button" class="tool-btn hover-lift" id="btnCheckUpdateNow" style="padding:6px 12px; font-size:0.8rem;">
+                      <span>🔄</span> <span data-i18n="btn_check_updates">التحقق الآن</span>
+                    </button>
+                    <button type="button" class="btn-update-cta hidden" id="btnManualUpdate" style="padding:6px 14px; font-size:0.8rem;">
+                      <span id="btnManualUpdateText" data-i18n="btn_update_now">تحديث وتثبيت الآن</span>
+                    </button>
+                  </div>
+                  <span class="hint-text" id="updateStatusHint" style="font-size:0.75rem;"></span>
+                </div>
+              </div>
+
+              <!-- Setting: YouTube Cookies (Anti-Bot Bypass) -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <div class="setting-name" data-i18n="setting_cookies_title">كوكيز يوتيوب لتجاوز الحظر (YouTube Bot Bypass)</div>
+                  <div class="setting-desc" data-i18n="setting_cookies_desc">تجاوز رسالة "Sign in to confirm you're not a bot" وتحميل الفيديوهات المحمية عبر ملف cookies.txt.</div>
+                </div>
+                <div class="setting-control-wrap" style="flex-direction:column; align-items:flex-end; gap:8px;">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="badge-index" id="cookiesStatusBadge" style="background:rgba(245,158,11,0.2); color:#f59e0b;">غير مفعلة ⚠️</span>
+                    <input type="file" id="cookiesFileInput" accept=".txt" style="display:none;" />
+                    <button type="button" class="tool-btn hover-lift" id="btnUploadCookies" style="padding:6px 12px; font-size:0.8rem;">
+                      <span>📁</span> <span data-i18n="btn_import_cookies">استيراد cookies.txt</span>
+                    </button>
+                    <button type="button" class="tool-btn hover-lift" id="btnTogglePasteCookies" style="padding:6px 10px; font-size:0.8rem;" title="لصق الكوكيز">
+                      <span>📋</span>
+                    </button>
+                    <button type="button" class="tool-btn hover-lift hidden" id="btnClearCookies" style="padding:6px 10px; font-size:0.8rem; color:#ef4444;" title="حذف الكوكيز">
+                      <span>🗑️</span>
+                    </button>
+                  </div>
+                  <div id="cookiesPasteBox" class="hidden" style="width:100%; margin-top:6px;">
+                    <textarea id="cookiesPasteArea" class="text-control" rows="3" placeholder="# Netscape HTTP Cookie File... (الصق محتوى الكوكيز هنا)" style="font-size:0.75rem; font-family:monospace;"></textarea>
+                    <div style="display:flex; justify-content:flex-end; margin-top:4px;">
+                      <button type="button" class="btn-primary hover-lift" id="btnSavePastedCookies" style="padding:4px 12px; font-size:0.75rem;">حفظ الكوكيز</button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

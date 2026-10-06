@@ -1,4 +1,5 @@
-yt-dlp>=2025.1.0
+yt-dlp>=2026.09.0
+yt-dlp-ejs>=0.8.0
 fastapi>=0.110.0
 uvicorn[standard]>=0.28.0
 python-multipart>=0.0.9

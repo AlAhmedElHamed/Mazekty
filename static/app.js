@@ -15,6 +15,14 @@ let previewDataList = [];
 // --- Comprehensive Bilingual Dictionary for 20+ Features ---
 const i18n = {
   "en": {
+    "update_available_title": "New Mazekty Pro Update Available!",
+    "btn_update_now": "Update & Install Now 🚀",
+    "btn_check_updates": "Check Now",
+    "setting_updates_title": "Auto-Update Engine",
+    "setting_updates_desc": "Automatically checks and updates from GitHub releases while keeping your settings intact.",
+    "setting_cookies_title": "YouTube Cookies (Anti-Bot Bypass)",
+    "setting_cookies_desc": "Bypass 'Sign in to confirm you are not a bot' on protected videos via cookies.txt.",
+    "btn_import_cookies": "Import cookies.txt",
     "auto_retry_end": "Auto-retry failed downloads at the end of queue",
     "btn_denoise_execute": "Clean & De-Noise Audio",
     "btn_identify_execute": "Analyze & Identify Track",
@@ -265,6 +273,14 @@ const i18n = {
     "sound_toggle_title": "Mute / Unmute Sound Effects",
   },
   "ar": {
+    "update_available_title": "يتوفر إصدار جديد من مزيكتي!",
+    "btn_update_now": "تحديث وتثبيت الآن 🚀",
+    "btn_check_updates": "التحقق الآن",
+    "setting_updates_title": "تحديثات التطبيق التلقائية (Auto-Update)",
+    "setting_updates_desc": "التحقق التلقائي من تحديثات GitHub وتثبيتها بسلاسة دون فقدان إعداداتك وموسيقاك.",
+    "setting_cookies_title": "كوكيز يوتيوب لتجاوز الحظر (YouTube Bot Bypass)",
+    "setting_cookies_desc": "تجاوز رسالة 'Sign in to confirm you are not a bot' وتحميل الفيديوهات المحمية عبر ملف cookies.txt.",
+    "btn_import_cookies": "استيراد cookies.txt",
     "auto_retry_end": "إعادة محاولة التحميلات الفاشلة تلقائياً في نهاية الطابور",
     "btn_denoise_execute": "تنقية وإزالة الضوضاء",
     "btn_identify_execute": "فحص التراك والتعرف عليه",
@@ -2834,6 +2850,22 @@ function handleWsEvent(msg) {
       if (msg.stats) updateStats(msg.stats);
       checkAutoRetryAtEnd();
       break;
+
+    case 'update_available':
+      handleUpdateAvailableEvent(msg);
+      break;
+
+    case 'update_progress':
+      handleUpdateProgressEvent(msg);
+      break;
+
+    case 'update_downloaded':
+      handleUpdateDownloadedEvent(msg);
+      break;
+
+    case 'update_error':
+      handleUpdateErrorEvent(msg);
+      break;
   }
 }
 
@@ -5281,7 +5313,335 @@ if (btnDoIdentify) {
 }
 
 // Auto-restore clipboard monitor setting & initialize theme from localStorage
+
+// ==========================================
+// AUTO-UPDATE & COOKIES MANAGEMENT
+// ==========================================
+
+let availableUpdateData = null;
+let isUpdateDownloading = false;
+
+function initAutoUpdate() {
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  const btnUpdateDismiss = document.getElementById('btnUpdateDismiss');
+  const btnCheckUpdateNow = document.getElementById('btnCheckUpdateNow');
+  const btnManualUpdate = document.getElementById('btnManualUpdate');
+
+  if (btnUpdateCta) {
+    btnUpdateCta.addEventListener('click', () => {
+      triggerUpdateInstallation();
+    });
+  }
+
+  if (btnUpdateDismiss) {
+    btnUpdateDismiss.addEventListener('click', () => {
+      const banner = document.getElementById('updateBanner');
+      if (banner) banner.classList.add('hidden');
+    });
+  }
+
+  if (btnCheckUpdateNow) {
+    btnCheckUpdateNow.addEventListener('click', async () => {
+      playUiSound('pop');
+      await checkAppUpdates(true);
+    });
+  }
+
+  if (btnManualUpdate) {
+    btnManualUpdate.addEventListener('click', () => {
+      triggerUpdateInstallation();
+    });
+  }
+
+  // Trigger check 3s after boot
+  setTimeout(() => {
+    checkAppUpdates(false);
+  }, 3000);
+}
+
+async function checkAppUpdates(showToastOnCurrent = false) {
+  const updateStatusHint = document.getElementById('updateStatusHint');
+  const btnCheckUpdateNow = document.getElementById('btnCheckUpdateNow');
+  if (btnCheckUpdateNow) btnCheckUpdateNow.disabled = true;
+  if (updateStatusHint) updateStatusHint.textContent = currentLang === 'ar' ? 'جاري التحقق من GitHub...' : 'Checking GitHub...';
+
+  try {
+    const res = await fetch('/api/update/check');
+    const data = await res.json();
+    if (data.update_available) {
+      handleUpdateAvailableEvent(data);
+    } else {
+      if (updateStatusHint) {
+        updateStatusHint.textContent = currentLang === 'ar' ? `✓ أنت تستخدم أحدث إصدار (${data.current_version})` : `✓ You are using the latest version (${data.current_version})`;
+        updateStatusHint.style.color = '#10b981';
+      }
+      if (showToastOnCurrent) {
+        playUiSound('success');
+      }
+    }
+  } catch (e) {
+    if (updateStatusHint) {
+      updateStatusHint.textContent = currentLang === 'ar' ? 'تعذر الاتصال بـ GitHub للتحقق من التحديثات' : 'Could not reach GitHub for updates';
+      updateStatusHint.style.color = '#ef4444';
+    }
+  } finally {
+    if (btnCheckUpdateNow) btnCheckUpdateNow.disabled = false;
+  }
+}
+
+function handleUpdateAvailableEvent(data) {
+  availableUpdateData = data;
+  const banner = document.getElementById('updateBanner');
+  const bannerTitle = document.getElementById('updateBannerTitle');
+  const bannerSub = document.getElementById('updateBannerSub');
+  const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
+  const btnManualUpdate = document.getElementById('btnManualUpdate');
+  const updateStatusHint = document.getElementById('updateStatusHint');
+
+  const ver = data.latest_version || '';
+  if (bannerTitle) {
+    bannerTitle.textContent = currentLang === 'ar' ? `🎉 يتوفر تحديث جديد: Mazekty Pro v${ver}!` : `🎉 New Update Available: Mazekty Pro v${ver}!`;
+  }
+  if (bannerSub) {
+    bannerSub.textContent = currentLang === 'ar' ? 'تحديث تلقائي بالكامل مع الحفاظ الكامل على إعداداتك وموسيقاك.' : 'Seamless 1-click update preserving all settings.';
+  }
+  if (banner) banner.classList.remove('hidden');
+
+  if (btnManualUpdate) {
+    btnManualUpdate.classList.remove('hidden');
+  }
+  if (updateStatusHint) {
+    updateStatusHint.textContent = currentLang === 'ar' ? `يتوفر إصدار جديد: v${ver}` : `New version available: v${ver}`;
+    updateStatusHint.style.color = '#fbbf24';
+  }
+}
+
+async function triggerUpdateInstallation() {
+  if (isUpdateDownloading) return;
+
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
+  const btnManualUpdateText = document.getElementById('btnManualUpdateText');
+  const progressLine = document.getElementById('updateProgressLine');
+
+  if (btnUpdateCta) btnUpdateCta.disabled = true;
+  if (btnUpdateCtaText) btnUpdateCtaText.textContent = currentLang === 'ar' ? 'جاري بدء التحميل...' : 'Starting download...';
+  if (btnManualUpdateText) btnManualUpdateText.textContent = currentLang === 'ar' ? 'جاري التحميل...' : 'Downloading...';
+  if (progressLine) progressLine.classList.remove('hidden');
+
+  isUpdateDownloading = true;
+  playUiSound('pop');
+
+  try {
+    const res = await fetch('/api/update/download', { method: 'POST' });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.detail || 'Download request failed');
+    }
+  } catch (e) {
+    isUpdateDownloading = false;
+    if (btnUpdateCta) btnUpdateCta.disabled = false;
+    alert((currentLang === 'ar' ? 'فشل بدء تحميل التحديث: ' : 'Failed to start download: ') + e.message);
+  }
+}
+
+function handleUpdateProgressEvent(msg) {
+  const progressFill = document.getElementById('updateProgressFill');
+  const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
+  const btnManualUpdateText = document.getElementById('btnManualUpdateText');
+  const updateStatusHint = document.getElementById('updateStatusHint');
+
+  const pct = msg.percent || 0;
+  const dl = msg.downloaded_mb || 0;
+  const tot = msg.total_mb || 0;
+  const spd = msg.speed || '';
+
+  if (progressFill) progressFill.style.width = `${pct}%`;
+
+  const statusStr = currentLang === 'ar'
+    ? `جاري التحميل: ${pct}% (${dl}/${tot} MB) 🚀 ${spd}`
+    : `Downloading: ${pct}% (${dl}/${tot} MB) 🚀 ${spd}`;
+
+  if (btnUpdateCtaText) btnUpdateCtaText.textContent = `${pct}% (${dl} MB)`;
+  if (btnManualUpdateText) btnManualUpdateText.textContent = `${pct}%`;
+  if (updateStatusHint) updateStatusHint.textContent = statusStr;
+}
+
+function handleUpdateDownloadedEvent(msg) {
+  isUpdateDownloading = false;
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
+  const btnManualUpdate = document.getElementById('btnManualUpdate');
+  const btnManualUpdateText = document.getElementById('btnManualUpdateText');
+  const bannerTitle = document.getElementById('updateBannerTitle');
+  const bannerSub = document.getElementById('updateBannerSub');
+  const updateStatusHint = document.getElementById('updateStatusHint');
+
+  playUiSound('success');
+
+  const readyTitle = currentLang === 'ar' ? '✓ اكتمل تحميل التحديث بنجاح!' : '✓ Update Downloaded Successfully!';
+  const readySub = currentLang === 'ar' ? 'جاري تثبيت التحديث وإعادة تشغيل مزيكتي برو تلقائياً...' : 'Restarting app to apply update...';
+  const restartBtnText = currentLang === 'ar' ? 'إعادة التشغيل الآن 🔄' : 'Restart & Update Now 🔄';
+
+  if (bannerTitle) bannerTitle.textContent = readyTitle;
+  if (bannerSub) bannerSub.textContent = readySub;
+  if (btnUpdateCtaText) btnUpdateCtaText.textContent = restartBtnText;
+  if (btnManualUpdateText) btnManualUpdateText.textContent = restartBtnText;
+  if (btnUpdateCta) {
+    btnUpdateCta.disabled = false;
+    btnUpdateCta.onclick = applyUpdateNow;
+  }
+  if (btnManualUpdate) {
+    btnManualUpdate.disabled = false;
+    btnManualUpdate.onclick = applyUpdateNow;
+  }
+  if (updateStatusHint) {
+    updateStatusHint.textContent = readySub;
+    updateStatusHint.style.color = '#10b981';
+  }
+
+  // Automatically apply update after 1.5 seconds!
+  setTimeout(() => {
+    applyUpdateNow();
+  }, 1500);
+}
+
+async function applyUpdateNow() {
+  const updateStatusHint = document.getElementById('updateStatusHint');
+  const bannerSub = document.getElementById('updateBannerSub');
+  const msg = currentLang === 'ar' ? 'جاري إغلاق التطبيق وتطبيق التحديث...' : 'Applying update and restarting...';
+  if (updateStatusHint) updateStatusHint.textContent = msg;
+  if (bannerSub) bannerSub.textContent = msg;
+
+  try {
+    await fetch('/api/update/apply', { method: 'POST' });
+  } catch (e) {}
+}
+
+function handleUpdateErrorEvent(msg) {
+  isUpdateDownloading = false;
+  const updateStatusHint = document.getElementById('updateStatusHint');
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
+
+  if (btnUpdateCta) btnUpdateCta.disabled = false;
+  if (btnUpdateCtaText) btnUpdateCtaText.textContent = currentLang === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry 🔄';
+  if (updateStatusHint) {
+    updateStatusHint.textContent = (currentLang === 'ar' ? 'خطأ في التحميل: ' : 'Download error: ') + (msg.error || 'Unknown error');
+    updateStatusHint.style.color = '#ef4444';
+  }
+}
+
+// --- Cookies Management ---
+function initCookiesManager() {
+  const cookiesFileInput = document.getElementById('cookiesFileInput');
+  const btnUploadCookies = document.getElementById('btnUploadCookies');
+  const btnTogglePasteCookies = document.getElementById('btnTogglePasteCookies');
+  const cookiesPasteBox = document.getElementById('cookiesPasteBox');
+  const cookiesPasteArea = document.getElementById('cookiesPasteArea');
+  const btnSavePastedCookies = document.getElementById('btnSavePastedCookies');
+  const btnClearCookies = document.getElementById('btnClearCookies');
+
+  refreshCookiesStatus();
+
+  if (btnUploadCookies && cookiesFileInput) {
+    btnUploadCookies.addEventListener('click', () => {
+      cookiesFileInput.click();
+    });
+    cookiesFileInput.addEventListener('change', async () => {
+      if (!cookiesFileInput.files || !cookiesFileInput.files[0]) return;
+      const file = cookiesFileInput.files[0];
+      const formData = new FormData();
+      formData.append('file', file);
+      try {
+        const res = await fetch('/api/cookies/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          playUiSound('success');
+          alert(currentLang === 'ar' ? 'تم استيراد الكوكيز بنجاح! جاهز لتجاوز أي حظر في يوتيوب.' : 'Cookies imported successfully!');
+          refreshCookiesStatus();
+        } else {
+          alert(data.detail || 'Failed to upload cookies');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    });
+  }
+
+  if (btnTogglePasteCookies && cookiesPasteBox) {
+    btnTogglePasteCookies.addEventListener('click', () => {
+      cookiesPasteBox.classList.toggle('hidden');
+    });
+  }
+
+  if (btnSavePastedCookies && cookiesPasteArea) {
+    btnSavePastedCookies.addEventListener('click', async () => {
+      const text = cookiesPasteArea.value.trim();
+      if (!text) {
+        alert(currentLang === 'ar' ? 'يرجى لصق نص الكوكيز أولاً.' : 'Please paste cookie text first.');
+        return;
+      }
+      const formData = new FormData();
+      formData.append('raw_text', text);
+      try {
+        const res = await fetch('/api/cookies/upload', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (res.ok) {
+          playUiSound('success');
+          alert(currentLang === 'ar' ? 'تم حفظ الكوكيز بنجاح!' : 'Cookies saved successfully!');
+          cookiesPasteBox.classList.add('hidden');
+          cookiesPasteArea.value = '';
+          refreshCookiesStatus();
+        } else {
+          alert(data.detail || 'Failed to save cookies');
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    });
+  }
+
+  if (btnClearCookies) {
+    btnClearCookies.addEventListener('click', async () => {
+      if (!confirm(currentLang === 'ar' ? 'هل أنت متأكد من رغبتك في حذف ملف الكوكيز؟' : 'Are you sure you want to delete cookies?')) return;
+      try {
+        await fetch('/api/cookies/delete', { method: 'POST' });
+        playUiSound('pop');
+        refreshCookiesStatus();
+      } catch (e) {}
+    });
+  }
+}
+
+async function refreshCookiesStatus() {
+  const badge = document.getElementById('cookiesStatusBadge');
+  const btnClearCookies = document.getElementById('btnClearCookies');
+  try {
+    const res = await fetch('/api/cookies/status');
+    const data = await res.json();
+    if (data.enabled) {
+      if (badge) {
+        badge.textContent = currentLang === 'ar' ? `مفعلة ✅ (${data.size_kb} KB)` : `Active ✅ (${data.size_kb} KB)`;
+        badge.style.background = 'rgba(16, 185, 129, 0.2)';
+        badge.style.color = '#10b981';
+      }
+      if (btnClearCookies) btnClearCookies.classList.remove('hidden');
+    } else {
+      if (badge) {
+        badge.textContent = currentLang === 'ar' ? 'غير مفعلة ⚠️' : 'Inactive ⚠️';
+        badge.style.background = 'rgba(245, 158, 11, 0.2)';
+        badge.style.color = '#f59e0b';
+      }
+      if (btnClearCookies) btnClearCookies.classList.add('hidden');
+    }
+  } catch (e) {}
+}
+
 initClipboardMonitor();
+initAutoUpdate();
+initCookiesManager();
+
 applyTheme();
 
 // Startup

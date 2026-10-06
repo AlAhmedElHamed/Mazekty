@@ -62,6 +62,10 @@ def get_config_path() -> str:
     """Returns the path to the persistent config.json file."""
     return os.path.join(get_user_data_dir(), "config.json")
 
+def get_cookies_path() -> str:
+    """Returns the persistent path to cookies.txt in user data directory."""
+    return os.path.join(get_user_data_dir(), "cookies.txt")
+
 def get_default_download_dir(fallback_base: Optional[str] = None) -> str:
     """Returns sensible default download folder per OS, isolated from program files."""
     user_home = os.path.expanduser("~")

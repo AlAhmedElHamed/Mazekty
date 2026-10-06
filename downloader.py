@@ -185,6 +185,11 @@ class YouTubeDownloader:
             'no_warnings': True,
             'extract_flat': 'in_playlist',
             'skip_download': True,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'ios', 'web']
+                }
+            },
         }
 
         cookie_file = get_cookies_path()
@@ -387,6 +392,11 @@ class YouTubeDownloader:
             'buffersize': 1024 * 64,
             'concurrent_fragment_downloads': 4,
             'keepvideo': False,
+            'extractor_args': {
+                'youtube': {
+                    'player_client': ['android', 'ios', 'web']
+                }
+            },
         }
 
         # Set ffmpeg_location so yt-dlp finds portable or local FFmpeg
@@ -1155,7 +1165,31 @@ class YouTubeDownloader:
                         "preview_url": top.get("previewUrl")
                     }
         except Exception as e:
-            print(f"Identify error: {e}")
+            print(f"Identify iTunes error: {e}")
+
+        # Fallback: MusicBrainz Open Audio Database
+        try:
+            mb_url = f"https://musicbrainz.org/ws/2/recording/?query={urllib.parse.quote(query)}&fmt=json&limit=1"
+            mb_req = urllib.request.Request(mb_url, headers={'User-Agent': 'MazektyPro/1.5 (contact@mazekty.app)'})
+            with urllib.request.urlopen(mb_req, timeout=5) as mb_resp:
+                mb_data = json.loads(mb_resp.read().decode('utf-8'))
+                recs = mb_data.get("recordings", [])
+                if recs:
+                    rec = recs[0]
+                    artist_credit = rec.get("artist-credit", [{}])[0].get("name", "")
+                    release = rec.get("releases", [{}])[0] if rec.get("releases") else {}
+                    return {
+                        "found": True,
+                        "title": rec.get("title"),
+                        "artist": artist_credit,
+                        "album": release.get("title", ""),
+                        "year": (release.get("date") or "")[:4],
+                        "genre": "",
+                        "artwork_url": "",
+                        "preview_url": ""
+                    }
+        except Exception:
+            pass
 
         return {"found": False, "query": query, "tags": current_tags}
 

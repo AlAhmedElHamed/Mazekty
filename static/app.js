@@ -5332,11 +5332,13 @@ if (btnDoIdentify) {
 // Auto-restore clipboard monitor setting & initialize theme from localStorage
 
 // ==========================================
+// ==========================================
 // AUTO-UPDATE & COOKIES MANAGEMENT
 // ==========================================
 
 let availableUpdateData = null;
-let isUpdateDownloading = false;
+let updateWorkflowState = 'idle'; // 'idle' | 'available' | 'downloading' | 'downloaded' | 'applying'
+let isUpdateActionLocked = false;
 
 function initAutoUpdate() {
   const btnUpdateCta = document.getElementById('btnUpdateCta');
@@ -5344,10 +5346,13 @@ function initAutoUpdate() {
   const btnCheckUpdateNow = document.getElementById('btnCheckUpdateNow');
   const btnManualUpdate = document.getElementById('btnManualUpdate');
 
+  // Single unified click handler with debouncing and multi-click defense
   if (btnUpdateCta) {
-    btnUpdateCta.addEventListener('click', () => {
-      triggerUpdateInstallation();
-    });
+    btnUpdateCta.onclick = (e) => handleUnifiedUpdateClick(e);
+  }
+
+  if (btnManualUpdate) {
+    btnManualUpdate.onclick = (e) => handleUnifiedUpdateClick(e);
   }
 
   if (btnUpdateDismiss) {
@@ -5364,16 +5369,39 @@ function initAutoUpdate() {
     });
   }
 
-  if (btnManualUpdate) {
-    btnManualUpdate.addEventListener('click', () => {
-      triggerUpdateInstallation();
-    });
-  }
-
   // Trigger check 3s after boot
   setTimeout(() => {
     checkAppUpdates(false);
   }, 3000);
+}
+
+function handleUnifiedUpdateClick(e) {
+  if (e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  // 1. Strict anti-spam / multi-click lock
+  if (isUpdateActionLocked) return;
+  isUpdateActionLocked = true;
+
+  // 2. Immediate visual and functional button lockout
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  const btnManualUpdate = document.getElementById('btnManualUpdate');
+  [btnUpdateCta, btnManualUpdate].forEach(btn => {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.5';
+    }
+  });
+
+  // 3. Dispatch to appropriate action based on current state
+  if (updateWorkflowState === 'downloaded') {
+    applyUpdateNow();
+  } else {
+    triggerUpdateInstallation();
+  }
 }
 
 async function checkAppUpdates(showToastOnCurrent = false) {
@@ -5392,14 +5420,17 @@ async function checkAppUpdates(showToastOnCurrent = false) {
       if (hvBadge) hvBadge.textContent = 'v' + data.current_version;
     }
     if (data.update_available) {
+      updateWorkflowState = 'available';
       handleUpdateAvailableEvent(data);
     } else {
+      updateWorkflowState = 'idle';
       if (updateStatusHint) {
         updateStatusHint.textContent = currentLang === 'ar' ? `✓ أنت تستخدم أحدث إصدار (${data.current_version})` : `✓ You are using the latest version (${data.current_version})`;
         updateStatusHint.style.color = '#10b981';
       }
       if (showToastOnCurrent) {
         playUiSound('success');
+        showAppToast(currentLang === 'ar' ? `✓ أنت تستخدم أحدث إصدار بالفعل (v${data.current_version})` : `✓ You are already on the latest version (v${data.current_version})`);
       }
     }
   } catch (e) {
@@ -5414,11 +5445,16 @@ async function checkAppUpdates(showToastOnCurrent = false) {
 
 function handleUpdateAvailableEvent(data) {
   availableUpdateData = data;
+  updateWorkflowState = 'available';
+  isUpdateActionLocked = false;
+
   const banner = document.getElementById('updateBanner');
   const bannerTitle = document.getElementById('updateBannerTitle');
   const bannerSub = document.getElementById('updateBannerSub');
+  const btnUpdateCta = document.getElementById('btnUpdateCta');
   const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
   const btnManualUpdate = document.getElementById('btnManualUpdate');
+  const btnManualUpdateText = document.getElementById('btnManualUpdateText');
   const updateStatusHint = document.getElementById('updateStatusHint');
 
   const ver = data.latest_version || '';
@@ -5430,9 +5466,19 @@ function handleUpdateAvailableEvent(data) {
   }
   if (banner) banner.classList.remove('hidden');
 
-  if (btnManualUpdate) {
-    btnManualUpdate.classList.remove('hidden');
-  }
+  const updateNowTxt = currentLang === 'ar' ? 'تحديث وتثبيت الآن 🚀' : 'Update & Install Now 🚀';
+  if (btnUpdateCtaText) btnUpdateCtaText.textContent = updateNowTxt;
+  if (btnManualUpdateText) btnManualUpdateText.textContent = updateNowTxt;
+
+  [btnUpdateCta, btnManualUpdate].forEach(btn => {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.pointerEvents = 'auto';
+      btn.style.opacity = '1';
+      btn.classList.remove('hidden');
+    }
+  });
+
   if (updateStatusHint) {
     updateStatusHint.textContent = currentLang === 'ar' ? `يتوفر إصدار جديد: v${ver}` : `New version available: v${ver}`;
     updateStatusHint.style.color = '#fbbf24';
@@ -5440,19 +5486,15 @@ function handleUpdateAvailableEvent(data) {
 }
 
 async function triggerUpdateInstallation() {
-  if (isUpdateDownloading) return;
-
-  const btnUpdateCta = document.getElementById('btnUpdateCta');
+  updateWorkflowState = 'downloading';
   const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
   const btnManualUpdateText = document.getElementById('btnManualUpdateText');
   const progressLine = document.getElementById('updateProgressLine');
 
-  if (btnUpdateCta) btnUpdateCta.disabled = true;
   if (btnUpdateCtaText) btnUpdateCtaText.textContent = currentLang === 'ar' ? 'جاري بدء التحميل...' : 'Starting download...';
   if (btnManualUpdateText) btnManualUpdateText.textContent = currentLang === 'ar' ? 'جاري التحميل...' : 'Downloading...';
   if (progressLine) progressLine.classList.remove('hidden');
 
-  isUpdateDownloading = true;
   playUiSound('pop');
 
   try {
@@ -5462,13 +5504,23 @@ async function triggerUpdateInstallation() {
       throw new Error(data.detail || 'Download request failed');
     }
   } catch (e) {
-    isUpdateDownloading = false;
-    if (btnUpdateCta) btnUpdateCta.disabled = false;
+    updateWorkflowState = 'error';
+    isUpdateActionLocked = false;
+    const btnUpdateCta = document.getElementById('btnUpdateCta');
+    const btnManualUpdate = document.getElementById('btnManualUpdate');
+    [btnUpdateCta, btnManualUpdate].forEach(btn => {
+      if (btn) {
+        btn.disabled = false;
+        btn.style.pointerEvents = 'auto';
+        btn.style.opacity = '1';
+      }
+    });
     alert((currentLang === 'ar' ? 'فشل بدء تحميل التحديث: ' : 'Failed to start download: ') + e.message);
   }
 }
 
 function handleUpdateProgressEvent(msg) {
+  updateWorkflowState = 'downloading';
   const progressFill = document.getElementById('updateProgressFill');
   const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
   const btnManualUpdateText = document.getElementById('btnManualUpdateText');
@@ -5491,7 +5543,9 @@ function handleUpdateProgressEvent(msg) {
 }
 
 function handleUpdateDownloadedEvent(msg) {
-  isUpdateDownloading = false;
+  updateWorkflowState = 'downloaded';
+  isUpdateActionLocked = false; // Release lock for exactly ONE confirmation click
+
   const btnUpdateCta = document.getElementById('btnUpdateCta');
   const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
   const btnManualUpdate = document.getElementById('btnManualUpdate');
@@ -5503,41 +5557,46 @@ function handleUpdateDownloadedEvent(msg) {
   playUiSound('success');
 
   const readyTitle = currentLang === 'ar' ? '✓ اكتمل تحميل التحديث بنجاح!' : '✓ Update Downloaded Successfully!';
-  const readySub = currentLang === 'ar' ? 'جاري تثبيت التحديث وإعادة تشغيل مزيكتي برو تلقائياً...' : 'Restarting app to apply update...';
-  const restartBtnText = currentLang === 'ar' ? 'إعادة التشغيل الآن 🔄' : 'Restart & Update Now 🔄';
+  const readySub = currentLang === 'ar' ? 'اضغط على زر إعادة التشغيل لتطبيق التحديث بهدوء دون فقدان أي إعدادات.' : 'Click Restart to apply update smoothly.';
+  const restartBtnText = currentLang === 'ar' ? 'إعادة التشغيل والتثبيت الآن 🔄' : 'Restart & Update Now 🔄';
 
   if (bannerTitle) bannerTitle.textContent = readyTitle;
   if (bannerSub) bannerSub.textContent = readySub;
   if (btnUpdateCtaText) btnUpdateCtaText.textContent = restartBtnText;
   if (btnManualUpdateText) btnManualUpdateText.textContent = restartBtnText;
-  if (btnUpdateCta) {
-    btnUpdateCta.disabled = false;
-    btnUpdateCta.onclick = () => { applyUpdateNow(); };
-  }
-  if (btnManualUpdate) {
-    btnManualUpdate.disabled = false;
-    btnManualUpdate.onclick = () => { applyUpdateNow(); };
-  }
+
+  [btnUpdateCta, btnManualUpdate].forEach(btn => {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.pointerEvents = 'auto';
+      btn.style.opacity = '1';
+    }
+  });
+
   if (updateStatusHint) {
-    updateStatusHint.textContent = currentLang === 'ar' ? 'اضغط على زر إعادة التشغيل لتطبيق التحديث الآن.' : 'Click Restart to apply update now.';
+    updateStatusHint.textContent = currentLang === 'ar' ? 'التحديث جاهز! اضغط على زر إعادة التشغيل الآن.' : 'Update ready! Click restart now.';
     updateStatusHint.style.color = '#10b981';
   }
 }
 
-let isApplyingUpdate = false;
-
 async function applyUpdateNow() {
-  if (isApplyingUpdate) return;
-  isApplyingUpdate = true;
+  if (updateWorkflowState === 'applying') return;
+  updateWorkflowState = 'applying';
+  isUpdateActionLocked = true;
 
   const btnUpdateCta = document.getElementById('btnUpdateCta');
   const btnManualUpdate = document.getElementById('btnManualUpdate');
-  if (btnUpdateCta) btnUpdateCta.disabled = true;
-  if (btnManualUpdate) btnManualUpdate.disabled = true;
+  [btnUpdateCta, btnManualUpdate].forEach(btn => {
+    if (btn) {
+      btn.disabled = true;
+      btn.style.pointerEvents = 'none';
+      btn.style.opacity = '0.5';
+    }
+  });
 
   const updateStatusHint = document.getElementById('updateStatusHint');
   const bannerSub = document.getElementById('updateBannerSub');
-  const msg = currentLang === 'ar' ? 'جاري إغلاق التطبيق وتطبيق التحديث...' : 'Applying update and restarting...';
+  const msg = currentLang === 'ar' ? 'جاري إغلاق التطبيق وتطبيق التحديث بهدوء...' : 'Closing app and applying update smoothly...';
   if (updateStatusHint) updateStatusHint.textContent = msg;
   if (bannerSub) bannerSub.textContent = msg;
 
@@ -5547,13 +5606,26 @@ async function applyUpdateNow() {
 }
 
 function handleUpdateErrorEvent(msg) {
-  isUpdateDownloading = false;
+  updateWorkflowState = 'error';
+  isUpdateActionLocked = false;
   const updateStatusHint = document.getElementById('updateStatusHint');
   const btnUpdateCta = document.getElementById('btnUpdateCta');
   const btnUpdateCtaText = document.getElementById('btnUpdateCtaText');
+  const btnManualUpdate = document.getElementById('btnManualUpdate');
+  const btnManualUpdateText = document.getElementById('btnManualUpdateText');
 
-  if (btnUpdateCta) btnUpdateCta.disabled = false;
-  if (btnUpdateCtaText) btnUpdateCtaText.textContent = currentLang === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry 🔄';
+  const retryText = currentLang === 'ar' ? 'إعادة المحاولة 🔄' : 'Retry 🔄';
+  if (btnUpdateCtaText) btnUpdateCtaText.textContent = retryText;
+  if (btnManualUpdateText) btnManualUpdateText.textContent = retryText;
+
+  [btnUpdateCta, btnManualUpdate].forEach(btn => {
+    if (btn) {
+      btn.disabled = false;
+      btn.style.pointerEvents = 'auto';
+      btn.style.opacity = '1';
+    }
+  });
+
   if (updateStatusHint) {
     updateStatusHint.textContent = (currentLang === 'ar' ? 'خطأ في التحميل: ' : 'Download error: ') + (msg.error || 'Unknown error');
     updateStatusHint.style.color = '#ef4444';
@@ -5681,3 +5753,112 @@ setupCustomLanguageDropdown(settingsLangSelect);
 setLanguage(localStorage.getItem('mazekty_lang') || 'ar');
 
 fetchLibrary();
+
+// ==========================================
+// PRO MEDIA SHORTCUTS & APP TOAST NOTIFICATIONS
+// ==========================================
+
+function showAppToast(msg, duration = 3000) {
+  let toast = document.getElementById('mazektyAppToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'mazektyAppToast';
+    toast.style.cssText = `
+      position: fixed;
+      bottom: 95px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(15, 23, 42, 0.94);
+      border: 1px solid rgba(0, 242, 254, 0.4);
+      color: #fff;
+      padding: 10px 22px;
+      border-radius: 9999px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 15px rgba(0, 242, 254, 0.2);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 999999;
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    `;
+    document.body.appendChild(toast);
+  }
+
+  toast.innerHTML = msg;
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateX(-50%) translateY(0)';
+
+  clearTimeout(toast._hideTimer);
+  toast._hideTimer = setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(20px)';
+  }, duration);
+}
+
+// Global Media Keyboard Controls (Space = Play/Pause, Arrows = Seek & Volume, M = Mute, L = Loop)
+window.addEventListener('keydown', (e) => {
+  const activeEl = document.activeElement;
+  const isInput = activeEl && (
+    activeEl.tagName === 'INPUT' ||
+    activeEl.tagName === 'TEXTAREA' ||
+    activeEl.tagName === 'SELECT' ||
+    activeEl.isContentEditable
+  );
+  if (isInput) return;
+
+  if (e.code === 'Space') {
+    e.preventDefault();
+    if (globalAudioPlayer) {
+      if (globalAudioPlayer.paused) {
+        if (globalAudioPlayer.src) {
+          globalAudioPlayer.play();
+          showAppToast('▶ تشغيل (Play)', 1200);
+        }
+      } else {
+        globalAudioPlayer.pause();
+        showAppToast('⏸ إيقاف مؤقت (Pause)', 1200);
+      }
+    }
+  } else if (e.code === 'ArrowLeft') {
+    if (globalAudioPlayer && globalAudioPlayer.src) {
+      e.preventDefault();
+      globalAudioPlayer.currentTime = Math.max(0, globalAudioPlayer.currentTime - 5);
+      showAppToast('⏪ -5s', 800);
+    }
+  } else if (e.code === 'ArrowRight') {
+    if (globalAudioPlayer && globalAudioPlayer.src) {
+      e.preventDefault();
+      globalAudioPlayer.currentTime = Math.min(globalAudioPlayer.duration || 99999, globalAudioPlayer.currentTime + 5);
+      showAppToast('⏩ +5s', 800);
+    }
+  } else if (e.code === 'ArrowUp') {
+    if (globalAudioPlayer) {
+      e.preventDefault();
+      globalAudioPlayer.volume = Math.min(1.0, Number((globalAudioPlayer.volume + 0.05).toFixed(2)));
+      showAppToast(`🔊 ${Math.round(globalAudioPlayer.volume * 100)}%`, 1000);
+    }
+  } else if (e.code === 'ArrowDown') {
+    if (globalAudioPlayer) {
+      e.preventDefault();
+      globalAudioPlayer.volume = Math.max(0.0, Number((globalAudioPlayer.volume - 0.05).toFixed(2)));
+      showAppToast(`🔉 ${Math.round(globalAudioPlayer.volume * 100)}%`, 1000);
+    }
+  } else if (e.code === 'KeyM') {
+    if (globalAudioPlayer) {
+      e.preventDefault();
+      globalAudioPlayer.muted = !globalAudioPlayer.muted;
+      showAppToast(globalAudioPlayer.muted ? '🔇 كتم الصوت (Muted)' : '🔊 تشغيل الصوت (Unmuted)', 1200);
+    }
+  } else if (e.code === 'KeyL') {
+    if (globalAudioPlayer) {
+      e.preventDefault();
+      globalAudioPlayer.loop = !globalAudioPlayer.loop;
+      showAppToast(globalAudioPlayer.loop ? '🔂 تكرار المقطع: مفعّل (Loop On)' : '➡️ تكرار المقطع: معطّل (Loop Off)', 1500);
+    }
+  }
+});

@@ -11,6 +11,30 @@ try:
 except ImportError:
     webview = None
 
+_instance_mutex = None
+
+def ensure_single_instance():
+    """Guarantees only one instance of Mazekty Pro runs at any time on Windows."""
+    global _instance_mutex
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            mutex_name = "Global\\MazektyProSingleInstanceMutex"
+            _instance_mutex = ctypes.windll.kernel32.CreateMutexW(None, False, mutex_name)
+            last_error = ctypes.windll.kernel32.GetLastError()
+            # 183 = ERROR_ALREADY_EXISTS
+            if last_error == 183:
+                try:
+                    hwnd = ctypes.windll.user32.FindWindowW(None, "Mazekty Pro")
+                    if hwnd:
+                        ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
+                        ctypes.windll.user32.SetForegroundWindow(hwnd)
+                except Exception:
+                    pass
+                sys.exit(0)
+        except Exception:
+            pass
+
 def find_free_port(default_port=8000):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         if s.connect_ex(('127.0.0.1', default_port)) != 0:
@@ -24,6 +48,7 @@ def start_server(host, port):
     uvicorn.run(app, host=host, port=port, log_level="warning")
 
 def main():
+    ensure_single_instance()
     server_host = "0.0.0.0"
     port = find_free_port(8000)
 

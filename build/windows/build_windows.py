@@ -119,6 +119,13 @@ def main():
         print("    You can run Mazekty.exe directly from there.")
         return 0
 
+    installer_path = os.path.join(SCRIPT_DIR, "Mazekty_Windows_Setup.exe")
+    if os.path.isfile(installer_path):
+        try:
+            os.remove(installer_path)
+        except Exception:
+            pass
+
     print(f"[*] Compiling Inno Setup Installer using: {iscc}...")
     iss_file = os.path.join(SCRIPT_DIR, "installer_windows.iss")
     res = subprocess.run([iscc, iss_file], check=True)

@@ -1391,7 +1391,7 @@ async def delete_cookies_api():
 # AUTO-UPDATE ENGINE (GITHUB RELEASES)
 # ==========================================
 
-APP_VERSION = "1.5.1"
+APP_VERSION = "1.5.2"
 GITHUB_REPO = "AlAhmedElHamed/Mazekty"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 

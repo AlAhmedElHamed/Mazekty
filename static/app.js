@@ -5079,6 +5079,23 @@ if (btnPlayerMini) {
   });
 }
 
+// Playback Speed Selector (New in v1.5.2)
+const btnPlayerSpeed = document.getElementById('btnPlayerSpeed');
+if (btnPlayerSpeed) {
+  const speeds = [1.0, 1.25, 1.5, 2.0, 0.75];
+  let speedIdx = 0;
+  btnPlayerSpeed.addEventListener('click', () => {
+    playUiSound('pop');
+    speedIdx = (speedIdx + 1) % speeds.length;
+    const s = speeds[speedIdx];
+    btnPlayerSpeed.textContent = s + 'x';
+    const audio = document.getElementById('globalAudioPlayer');
+    if (audio) {
+      audio.playbackRate = s;
+    }
+  });
+}
+
 // 8. Pro Studio Tools 11-14 Handlers
 // Tool 11: AI Stems
 if (btnDoStems) {
@@ -5368,6 +5385,12 @@ async function checkAppUpdates(showToastOnCurrent = false) {
   try {
     const res = await fetch('/api/update/check');
     const data = await res.json();
+    if (data.current_version) {
+      const cvBadge = document.getElementById('currentVersionBadge');
+      if (cvBadge) cvBadge.textContent = 'v' + data.current_version;
+      const hvBadge = document.getElementById('headerVersionTag');
+      if (hvBadge) hvBadge.textContent = 'v' + data.current_version;
+    }
     if (data.update_available) {
       handleUpdateAvailableEvent(data);
     } else {

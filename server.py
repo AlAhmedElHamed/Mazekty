@@ -1391,7 +1391,7 @@ async def delete_cookies_api():
 # AUTO-UPDATE ENGINE (GITHUB RELEASES)
 # ==========================================
 
-APP_VERSION = "1.5.4"
+APP_VERSION = "1.5.5"
 GITHUB_REPO = "AlAhmedElHamed/Mazekty"
 GITHUB_RELEASES_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 
@@ -1614,7 +1614,10 @@ async def apply_update_api():
             os.makedirs(runner_dir, exist_ok=True)
             lock_dir = os.path.join(runner_dir, "install_lock")
             runner_cmd = os.path.join(runner_dir, "apply_update.cmd")
+            runner_vbs = os.path.join(runner_dir, "silent_runner.vbs")
             current_exe = os.path.abspath(sys.executable) if getattr(sys, 'frozen', False) else ""
+            if "temp" in current_exe.lower() or "tmp" in current_exe.lower():
+                current_exe = ""
             
             if installer.lower().endswith(".zip"):
                 app_dir = os.path.dirname(current_exe) if current_exe else os.path.abspath(".")
@@ -1644,27 +1647,25 @@ timeout /t 1 /nobreak >nul 2>&1
 start /wait "" "{installer}" /SILENT /VERYSILENT /SP- /SUPPRESSMSGBOXES /NORESTART /CLOSEAPPLICATIONS
 timeout /t 2 /nobreak >nul 2>&1
 rmdir "{lock_dir}" 2>nul
-if exist "{current_exe}" (
-    start "" "{current_exe}"
-) else if exist "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe" (
-    start "" "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe"
+if exist "%ProgramFiles(x86)%\\Mazekty\\Mazekty.exe" (
+    start "" "%ProgramFiles(x86)%\\Mazekty\\Mazekty.exe"
 ) else if exist "%ProgramFiles%\\Mazekty\\Mazekty.exe" (
     start "" "%ProgramFiles%\\Mazekty\\Mazekty.exe"
-) else if exist "%ProgramFiles(x86)%\\Mazekty\\Mazekty.exe" (
-    start "" "%ProgramFiles(x86)%\\Mazekty\\Mazekty.exe"
+) else if exist "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe" (
+    start "" "%LOCALAPPDATA%\\Programs\\Mazekty\\Mazekty.exe"
+) else if exist "{current_exe}" (
+    start "" "{current_exe}"
 )
 exit
 """
             with open(runner_cmd, "w", encoding="utf-8") as f:
                 f.write(cmd_script)
 
-            # CREATE_NO_WINDOW (0x08000000) prevents black cmd popups
-            flags = 0x08000000 | getattr(subprocess, "DETACHED_PROCESS", 0x00000008) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0x00000200)
-            subprocess.Popen(
-                f'cmd.exe /c "{runner_cmd}"',
-                shell=True,
-                creationflags=flags
-            )
+            # Native silent launcher via wscript GUI subsystem (zero console window, no popups)
+            with open(runner_vbs, "w", encoding="utf-8") as f:
+                f.write(f'CreateObject("Wscript.Shell").Run chr(34) & "{runner_cmd}" & chr(34), 0, False\n')
+
+            subprocess.Popen(["wscript.exe", "//B", "//Nologo", runner_vbs])
         elif "mac" in os_name or "darwin" in os_name:
             subprocess.Popen(["open", installer])
         elif "linux" in os_name:
